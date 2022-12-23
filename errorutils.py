@@ -63,7 +63,7 @@ def _showwarning(message, category, filename, lineno, file=None, line=None):
     try: file.write(text)
     except OSError: pass  # pragma: no cover
 
-def _excepthook(type_, value, traceback):  # pragma: no cover
+def _excepthook(_type, value, _traceback):  # pragma: no cover
     for s in javaishstacktrace(value): print(s)
 
 def _unraisablehook(unraisable):  # pragma: no cover
