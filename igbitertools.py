@@ -22,18 +22,18 @@ along with this program. If not, see https://www.gnu.org/licenses/
 """
 
 def gray_product(*iterables):
-    """Like :func:`product`, but return tuples in an order such that only one
+    """Like :func:`itertools.product`, but return tuples in an order such that only one
     element in the generated tuple changes from one iteration to the next.
 
         >>> list(gray_product('AB','CD'))
         [('A', 'C'), ('B', 'C'), ('B', 'D'), ('A', 'D')]
 
-    This is known under several names: "n-ary", "non-Boolean", "non-binary",
-    or "mixed-radix" Gray code.
+    Note that it is also true that only one element changes from the last to the first item of
+    the sequence, so it can be looped.
 
-    All input iterables are consumed by this function before the first output
-    item can be generated.
+    This is known under several names: "n-ary", "non-Boolean", "non-binary", or "mixed-radix" Gray code.
 
+    All input iterables are consumed by this function before the first output item can be generated.
     Each iterable must have at least two items, or a ``ValueError`` is raised.
 
     Reference: Knuth's "The Art of Computer Programming", Pre-Fascicle 2A,
