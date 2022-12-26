@@ -25,7 +25,7 @@ import sys
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from fileutils import to_Paths, autoglob, Pushd, filetypestr
+from fileutils import to_Paths, autoglob, Pushd, filetypestr, is_windows_filename_bad
 
 class TestFileUtils(unittest.TestCase):
 
@@ -101,6 +101,20 @@ class TestFileUtils(unittest.TestCase):
                 self.assertEqual( 'FIFO (named pipe)', filetypestr( os.lstat(tp/'quz') ) )
             else:  # pragma: no cover
                 print("Skipping fifo test (no mkfifo)", file=sys.stderr)
+
+    def test_is_windows_filename_bad(self):
+        self.assertFalse( is_windows_filename_bad("Hello.txt") )
+        self.assertFalse( is_windows_filename_bad("Hello .txt") )
+        self.assertFalse( is_windows_filename_bad(".Hello.txt") )
+        self.assertFalse( is_windows_filename_bad("Héllö.txt") )
+        self.assertTrue( is_windows_filename_bad("Hello?.txt") )
+        self.assertTrue( is_windows_filename_bad("Hello\tWorld.txt") )
+        self.assertTrue( is_windows_filename_bad("Hello\0World.txt") )
+        self.assertTrue( is_windows_filename_bad("lpt3") )
+        self.assertTrue( is_windows_filename_bad("NUL.txt") )
+        self.assertTrue( is_windows_filename_bad("Com1.tar.gz") )
+        self.assertTrue( is_windows_filename_bad("Hello.txt ") )
+        self.assertTrue( is_windows_filename_bad("Hello.txt.") )
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

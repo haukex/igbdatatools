@@ -80,3 +80,22 @@ def filetypestr(st :os.stat_result) -> str:
     # union/overlay file systems
     elif stat.S_ISWHT(st.st_mode): return "whiteout"  # pragma: no cover
     else: raise ValueError(f"unknown filetype {st.st_mode:#o}")  # pragma: no cover
+
+invalidchars = frozenset( '<>:"/\\|?*' + bytes(range(32)).decode('ASCII') )
+invalidnames = frozenset(( 'CON', 'PRN', 'AUX', 'NUL',
+    'COM0', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+    'LPT0', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9' ))
+def is_windows_filename_bad(fn :str) -> bool:
+    """Check whether a Windows filename is invalid.
+
+    Tests whether a filename contains invalid characters or has an invalid name, but
+    does *not* check whether there are name collisions between filenames of differing case.
+
+    Reference: https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+    """
+    return ( bool( set(fn).intersection(invalidchars) )  # invalid characters and names
+        or fn.upper() in invalidnames
+        # names are still invalid even if they have an extension
+        or any( fn.upper().startswith(x+".") for x in invalidnames )
+        # filenames shouldn't end on a space or period
+        or fn[-1] in (' ', '.') )
