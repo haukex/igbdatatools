@@ -32,41 +32,40 @@ from fileutils import AnyPaths, to_Paths
 
 class FileType(Enum):
     FILE = 0
-    DIR = 1
-    SYMLINK = 2
-    OTHER = 3
+    ARCHIVE = 1
+    DIR = 2
+    SYMLINK = 3
+    OTHER = 4
 
-def _procfile(fns :Sequence[PurePath], fh :typing.IO[bytes]|GzipFile, *, onlyfiles :bool) \
+def _procfile(fns :Sequence[PurePath], fh :typing.IO[bytes]|GzipFile) \
         -> Generator[ tuple[ tuple[PurePath, ...], typing.IO[bytes], FileType ] ]:
     bfnl = fns[-1].name.lower()
     if bfnl.endswith('.tar.gz') or bfnl.endswith('.tgz') or bfnl.endswith('.tar'):
+        yield fns, None, FileType.ARCHIVE
         with TarFile.open(fileobj=fh) as tf:
             for ti in tf.getmembers():
                 newname = (*fns, PurePosixPath(ti.name))
-                if ti.issym():
-                    if not onlyfiles: yield newname, None, FileType.SYMLINK
-                elif ti.isdir():
-                    if not onlyfiles: yield newname, None, FileType.DIR
+                if ti.issym(): yield newname, None, FileType.SYMLINK
+                elif ti.isdir(): yield newname, None, FileType.DIR
                 elif ti.isfile():
                     with tf.extractfile(ti) as fh2:
-                        yield from _procfile(newname, fh2, onlyfiles=onlyfiles)
-                else:
-                    # for ti.type see e.g.: https://github.com/python/cpython/blob/v3.11.1/Lib/tarfile.py#L87
-                    if not onlyfiles: yield newname, None, FileType.OTHER
+                        yield from _procfile(newname, fh2)
+                else: yield newname, None, FileType.OTHER  # for ti.type see e.g.: https://github.com/python/cpython/blob/v3.11.1/Lib/tarfile.py#L87
     elif bfnl.endswith('.zip'):
+        yield fns, None, FileType.ARCHIVE
         with ZipFile(fh) as zf:
             for zi in zf.infolist():
                 # Note the ZIP specification requires forward slashes for pathnames.
                 # https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
                 newname = (*fns, PurePosixPath(zi.filename))
-                if zi.is_dir():
-                    if not onlyfiles: yield newname, None, FileType.DIR
+                if zi.is_dir(): yield newname, None, FileType.DIR
                 else:  # (note this interface doesn't have an is_file)
                     with zf.open(zi) as fh2:
-                        yield from _procfile(newname, fh2, onlyfiles=onlyfiles)
+                        yield from _procfile(newname, fh2)
     elif bfnl.endswith('.gz'):
+        yield fns, None, FileType.ARCHIVE
         with GzipFile(fileobj=fh, mode='rb') as fh2:
-            yield from _procfile((*fns, fns[-1].with_suffix('')), fh2, onlyfiles=onlyfiles)
+            yield from _procfile((*fns, fns[-1].with_suffix('')), fh2)
     else:
         yield fns, fh, FileType.FILE
 
@@ -112,7 +111,7 @@ def unzipwalk(paths :AnyPaths, *, onlyfiles :bool=True) \
             if not onlyfiles: yield (p,), None, FileType.DIR
         elif p.is_file():
             with p.open('rb') as fh:
-                yield from _procfile((p,), fh, onlyfiles=onlyfiles)
+                yield from ( f for f in _procfile((p,), fh) if f[2]==FileType.FILE ) if onlyfiles else _procfile((p,), fh)
         else:
             if not onlyfiles: yield (p,), None, FileType.OTHER
 
