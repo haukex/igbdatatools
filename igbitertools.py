@@ -60,7 +60,7 @@ def gray_product(*iterables):
             f[j] = f[j+1]
             f[j+1] = j+1
 
-def no_duplicates(iterable, key=None, name="item"):
+def no_duplicates(iterable, *, key=None, name="item"):
     """Raise a ``ValueError`` if there are any duplicate elements in the
     input iterable.
 

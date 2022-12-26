@@ -37,8 +37,8 @@ def to_Paths(paths :AnyPaths) -> Generator[Path]:
     if isinstance(paths, str|bytes|os.PathLike): yield topath(paths)
     else: yield from map(topath, iter(paths))
 
-def autoglob(files :Iterable[str], *, force=False):
-    """In Windows, automatically apply ``glob`` and ``expanduser``, otherwise do nothing."""
+def autoglob(files :Iterable[str], *, force :bool=False) -> Generator[str]:
+    """In Windows, automatically apply ``glob`` and ``expanduser``, otherwise don't change the input."""
     from glob import glob
     from os.path import expanduser
     if sys.platform.startswith('win32') or force:

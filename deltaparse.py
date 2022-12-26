@@ -25,7 +25,7 @@ import regex
 _deltaregex = regex.compile(r'(?<=\A|\D)(\d+)\s*([dhms]?)(?=\Z|\d|\W)', regex.IGNORECASE)
 _validregex = regex.compile(r'\A\s*(?:' + _deltaregex.pattern + r'\s*)*\Z', regex.IGNORECASE)
 
-def deltaparse(string):
+def deltaparse(string :str) -> int:
     """Parse a "time delta" string into seconds.
     
     Parses strings such as "2h 5m", "5d 30h 5s", etc. into seconds. Values

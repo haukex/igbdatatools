@@ -40,10 +40,14 @@ class TestErrorUtils(unittest.TestCase):
 
     def test_running_in_unittest(self):
         self.assertTrue(errorutils.running_in_unittest())
-        sp = subprocess.run([sys.executable, '-c', 'import errorutils; print(repr(errorutils.running_in_unittest()))'],
+        sp1 = subprocess.run([sys.executable, '-c', 'import errorutils; print(repr(errorutils.running_in_unittest()))'],
             check=True, capture_output=True, cwd=Path(__file__).parent.parent)
-        self.assertEqual(b'False', sp.stdout.strip())
-        self.assertEqual(b'', sp.stderr)
+        self.assertEqual(b'False', sp1.stdout.strip())
+        self.assertEqual(b'', sp1.stderr)
+        sp2 = subprocess.run([sys.executable, '-c', 'import unittest; import errorutils; print(repr(errorutils.running_in_unittest()))'],
+            check=True, capture_output=True, cwd=Path(__file__).parent.parent)
+        self.assertEqual(b'False', sp2.stdout.strip())
+        self.assertEqual(b'', sp2.stderr)
 
     def test_excepthook(self):
         sp = subprocess.run([sys.executable, tests.errorutils_test_funcs.__file__],

@@ -72,7 +72,9 @@ def _unraisablehook(unraisable):  # pragma: no cover
     for s in javaishstacktrace(unraisable.exc_value): print(s)
 
 class CustomHandlers:
-    """A context manager that installs and removes this module's custom error and warning handlers."""
+    """A context manager that installs and removes this module's custom error and warning handlers.
+
+    This modifies ``warnings.showwarning``, ``sys.excepthook``, and ``sys.unraisablehook``."""
     def __enter__(self):
         self.showwarning_orig = warnings.showwarning
         warnings.showwarning = _showwarning

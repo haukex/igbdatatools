@@ -90,7 +90,7 @@ def unzipwalk(paths :AnyPaths, *, onlyfiles :bool=True) \
     one element, then the yielded file is contained in a compressed file, possibly nested in other compressed file(s),
     and the last element of the tuple will contain the file's actual name.
 
-    The yielded filehandles can for example be wrappend in ``io.TextIOWrapper`` to read them as text files,
+    The yielded filehandles can for example be wrapped in ``io.TextIOWrapper`` to read them as text files,
     or even CSV files, for example:
 
         >>> from io import TextIOWrapper
