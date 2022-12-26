@@ -37,8 +37,7 @@ class FileType(Enum):
     OTHER = 3
 
 def _procfile(fns :Sequence[PurePath], fh :typing.IO[bytes]|GzipFile, *, onlyfiles :bool) \
-        -> Generator[ tuple[ tuple[PurePath, ...], typing.IO[bytes] ]
-                    | tuple[ tuple[PurePath, ...], typing.IO[bytes], FileType ] ]:
+        -> Generator[ tuple[ tuple[PurePath, ...], typing.IO[bytes], FileType ] ]:
     bfnl = fns[-1].name.lower()
     if bfnl.endswith('.tar.gz') or bfnl.endswith('.tgz') or bfnl.endswith('.tar'):
         with TarFile.open(fileobj=fh) as tf:
@@ -69,33 +68,30 @@ def _procfile(fns :Sequence[PurePath], fh :typing.IO[bytes]|GzipFile, *, onlyfil
         with GzipFile(fileobj=fh, mode='rb') as fh2:
             yield from _procfile((*fns, fns[-1].with_suffix('')), fh2, onlyfiles=onlyfiles)
     else:
-        if onlyfiles: yield fns, fh
-        else: yield fns, fh, FileType.FILE
+        yield fns, fh, FileType.FILE
 
 def unzipwalk(paths :AnyPaths, *, onlyfiles :bool=True) \
-        -> Generator[ tuple[ tuple[PurePath, ...], typing.IO[bytes] ]
-                    | tuple[ tuple[PurePath, ...], typing.IO[bytes], FileType ] ]:
+        -> Generator[ tuple[ tuple[PurePath, ...], typing.IO[bytes], FileType ] ]:
     """Recursively step into directories and compressed files and yield names and filehandles.
 
-    When ``onlyfiles`` is ``True`` (the default), this generator will yield tuples consisting of two elements:
-    1. a tuple of the filename(s) (described below), and 2. the filehandle for reading the file contents,
-    open in binary mode. Whether this filehandle supports operations like seeking depends on the underlying library.
+    This generator yields tuples consisting of the elements:
 
-    When ``onlyfiles`` is ``False``, the above tuples will contain a third element: a ``FileType`` value.
-    When this value is *not* ``FileType.FILE``, then the second element, which is normally the filehandle,
-    will be ``None``.
-
-    The first element of the yielded tuple is always a tuple of ``pathlib`` objects. If this tuple has only
-    one element, then the yielded file physically exists in the filesystem, and if the tuple has more than
-    one element, then the yielded file is contained in a compressed file, possibly nested in other compressed file(s),
-    and the last element of the tuple will contain the file's actual name.
+    1. A tuple of the filename(s) as ``pathlib`` objects. If this tuple has only one element, then the yielded file
+       physically exists in the filesystem, and if the tuple has more than one element, then the yielded file is
+       contained in a compressed file, possibly nested in other compressed file(s), and the last element of the
+       tuple will contain the file's actual name.
+    2. The filehandle for reading the file contents, open in binary mode. *However,* if ``onlyfiles`` is ``False``
+       and the file type is anything other than ``FileType.FILE``, this element will be ``None``.
+       Whether this filehandle supports operations like seeking depends on the underlying library.
+    3. A ``FileType`` value representing the type of the current file.
+       When ``onlyfiles`` is ``True`` (the default), this will always be ``FileType.FILE``.
 
     The yielded filehandles can for example be wrapped in ``io.TextIOWrapper`` to read them as text files,
     or even CSV files, for example:
 
         >>> from io import TextIOWrapper
         >>> import csv
-        >>> for fnames, binfhnd in unzipwalk('.'):
+        >>> for fnames, binfhnd, _ in unzipwalk('.'):
         ...     if fnames[-1].suffix.lower() == '.csv':
         ...         with TextIOWrapper(binfhnd, 'UTF-8', newline='') as fhnd:
         ...             print(repr(fnames))
@@ -137,7 +133,7 @@ if __name__ == '__main__':  # pragma: no cover
                 print(f"{filenames!r} {ftype} {handle.read()!r}")
             else: print(f"{filenames!r} {ftype}")
     else:
-        for filenames, handle in unzipwalk(thepaths):
+        for filenames, handle, _ in unzipwalk(thepaths):
             if args.dump: print(f"{filenames!r} {handle.read()!r}")
             else: print(f"{filenames!r}")
     sys.exit(0)

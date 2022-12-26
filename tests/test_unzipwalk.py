@@ -103,8 +103,8 @@ class TestUnzipWalk(unittest.TestCase):
 
     def test_unzipwalk(self):
         self.assertEqual(
-            sorted( x[0:-1] for x in self.expect_all if x[-1]==FileType.FILE ),
-            sorted( (fns, fh.read()) for fns, fh in unzipwalk(os.curdir) ) )
+            sorted( x for x in self.expect_all if x[-1]==FileType.FILE ),
+            sorted( (fns, fh.read(), ft) for fns, fh, ft in unzipwalk(os.curdir) ) )
 
     def test_unzipwalk_all(self):
         self.assertEqual(self.expect_all,
