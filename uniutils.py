@@ -52,10 +52,10 @@ def graphemeclusters(text :str|UnicodeString, *, locale=Locale.getRoot()) -> Gen
         start = end
     assert end == len(text)
 
-_commonascii = bytes(chain((0x09,0x0A,0x0D),range(0x20,0x7F))).decode("ASCII")
+common_ascii = bytes(chain((0x09, 0x0A, 0x0D), range(0x20, 0x7F))).decode("ASCII")
 def is_common_ascii_char(char :str) -> bool:
     """Return whether the given character is CR, LF, Tab, or printable ASCII."""
-    return len(char)==1 and char in _commonascii
+    return len(char)==1 and char in common_ascii
 
 def format_unichars(chars :str) -> str:
     """Format a string into its code points, including character names.
