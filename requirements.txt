@@ -2,4 +2,4 @@
 # pip3 install --upgrade --upgrade-strategy=eager -r requirements.txt
 more-itertools
 Unidecode
-pyicu  # sudo apt-get build-dep python3-icu
+pyicu  # sudo apt-get build-dep python3-icu; Windows: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyicu

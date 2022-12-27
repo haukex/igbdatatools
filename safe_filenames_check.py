@@ -53,10 +53,10 @@ def list_problems(paths :AnyPaths, *, ignore_compressed :bool = False, ignore_sy
             # For physical files, we know unzipwalk will report every entry,
             # so it's fine to just check the filename ...
             names_to_check = (thefn.name,)
-        else: # compressed
+        else:  # compressed
             assert len(fns)>1
             if ignore_compressed: continue
-            # however, in compressed files, it's possible for files inside of directories
+            # ... however, in compressed files, it's possible for files inside of directories
             # to show up without there being an entry for the directory.
             names_to_check = thefn.parts
             # ### A brief Type Check interjection
