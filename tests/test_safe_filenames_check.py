@@ -35,7 +35,7 @@ expect :tuple[ tuple[ tuple[PurePath, ...], str ], ... ] = (
     ((Path('examples.tgz'), PurePosixPath('Hello.txt ')), "filename not allowed in Windows: 'Hello.txt '"),
     ((Path('examples.tgz'), PurePosixPath('Hello.txt.')), "filename not allowed in Windows: 'Hello.txt.'"),
     ((Path('examples.tgz'), PurePosixPath('Hello\nWorld.txt')), "filename not allowed in Windows: 'Hello\\nWorld.txt'"),
-    ((Path('examples.tgz'), PurePosixPath('Hello.TXT')), "case collision in (PosixPath('examples.tgz'),): ['HELLO.TXT', 'hello.txt']"),
+    ((Path('examples.tgz'), PurePosixPath('Hello.TXT')), f"case collision in ({Path('examples.tgz')!r},): ['HELLO.TXT', 'hello.txt']"),
     ((Path('examples.tgz'), PurePosixPath('Héllö.txt')), "non-ASCII characters ('é',"" 'ö'"")"),
     ((Path('examples.tgz'), PurePosixPath('bar.txt')), 'FileType.SYMLINK'),
     ((Path('examples.tgz'), PurePosixPath('foo.fifo')), 'FileType.OTHER'),
