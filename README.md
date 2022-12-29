@@ -6,16 +6,8 @@ utilities. Please see the individual files for details.
 
 Requirements: Python 3.11 and the requirements listed in `requirements.txt`.
 
-You should place this directory in your `PYTHONPATH` environment variable, e.g.
-in `.profile`:
-
-        PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}$HOME/code/igbdatatools"
-
-In Windows 10, environment variables can be added for the current user via the
-Control Panel, in User Accounts you can find a setting "Change my environment
-variables", or you can press Windows+R and then enter:
-
-        rundll32.exe sysdm.cpl,EditEnvironmentVariables
+You can place this directory in your `PYTHONPATH` environment variable,
+see the file `notes/Notes.md` for details.
 
 
 Author, Copyright, and License
