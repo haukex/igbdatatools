@@ -20,6 +20,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
+from collections.abc import Sized, Iterator, Iterable
+from typing import TypeVar, Generic
 
 def gray_product(*iterables):
     """Like :func:`itertools.product`, but return tuples in an order such that only one
@@ -59,6 +61,31 @@ def gray_product(*iterables):
             o[j] = -o[j]
             f[j] = f[j+1]
             f[j+1] = j+1
+
+_T = TypeVar('_T', covariant=True)
+class SizedIterator(Generic[_T], Sized, Iterator[_T]):
+    """Wrapper to add ``len`` support to an iterator.
+
+    For example, this can be used to wrap a generator which has a known output length
+    (e.g. if it returns exactly one item per input item), so that it can then
+    be used in libraries like ``tqdm``."""
+    def __init__(self, it :Iterable[_T], length :int, *, strict :bool=False):
+        if length<0: raise ValueError("length must be >= 0")
+        self.it = iter(it)
+        self.length = length
+        self._count = 0
+        self.strict = strict
+    def __len__(self) -> int: return self.length
+    def __iter__(self) -> Iterator[_T]: return self
+    def __next__(self) -> _T:
+        try:
+            val :_T = next(self.it)
+            self._count += 1
+        except StopIteration:
+            if self.strict and self._count != self.length:
+                raise ValueError(f"expected iterator to return {self.length} items, but it returned {self._count}")
+            raise
+        return val
 
 def no_duplicates(iterable, *, key=None, name="item"):
     """Raise a ``ValueError`` if there are any duplicate elements in the

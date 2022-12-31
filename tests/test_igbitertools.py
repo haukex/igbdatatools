@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 import unittest
-from igbitertools import gray_product, no_duplicates
+from igbitertools import gray_product, no_duplicates, SizedIterator
 from itertools import product
 
 class TestIgbItertools(unittest.TestCase):
@@ -44,6 +44,28 @@ class TestIgbItertools(unittest.TestCase):
 
         iters = ( ("a","b"), range(3,6), [None, None], {"i","j","k","l"}, "XYZ" )
         self.assertEqual( sorted( product(*iters) ), sorted( gray_product(*iters) ) )
+
+    def test_sized_iterator(self):
+        def gen(x):
+            for i in range(x): yield i
+        g = gen(10)
+        with self.assertRaises(TypeError):
+            # noinspection PyTypeChecker
+            self.assertNotEqual(len(g), 10)
+        it = SizedIterator(g, 10)
+        self.assertEqual(len(it), 10)
+        self.assertEqual(iter(it), it)
+        self.assertEqual(list(it), [0,1,2,3,4,5,6,7,8,9])
+        with self.assertRaises(ValueError):
+            SizedIterator(range(1), -1)
+        # strict on
+        self.assertEqual(
+            list( SizedIterator(gen(10), 10, strict=True) ),
+            [0,1,2,3,4,5,6,7,8,9] )
+        with self.assertRaises(ValueError):
+            list( SizedIterator(gen(10), 11, strict=True) )
+        with self.assertRaises(ValueError):
+            list( SizedIterator(gen(10), 9, strict=True) )
 
     def test_no_duplicates(self):
         in1 = ( "foo", "bar", "quz", 123 )
