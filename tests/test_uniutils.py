@@ -32,14 +32,16 @@ class TestUniUtils(unittest.TestCase):
         self.assertEqual( tuple(graphemeclusters("")), () )
         self.assertEqual( tuple(graphemeclusters("ABC")), ("A","B","C") )
         self.assertEqual( tuple(graphemeclusters(UnicodeString("ABC"))), ("A","B","C") )
-        text = "äBéÇ 각நி-æ"
+        text = "äBéÇ 각நி-æ\r\n"
         exp = ("a\N{COMBINING DIAERESIS}","B","e\N{COMBINING ACUTE ACCENT}","C\N{COMBINING CEDILLA}"," ",
             "\N{HANGUL CHOSEONG KIYEOK}\N{HANGUL JUNGSEONG A}\N{HANGUL JONGSEONG KIYEOK}",
-            "\N{TAMIL LETTER NA}\N{TAMIL VOWEL SIGN I}","-","\N{LATIN SMALL LETTER AE}")
+            "\N{TAMIL LETTER NA}\N{TAMIL VOWEL SIGN I}","-","\N{LATIN SMALL LETTER AE}",
+            "\N{CARRIAGE RETURN}\N{LINE FEED}")
         self.assertEqual( tuple(graphemeclusters(text)), exp )
 
     def test_is_common_ascii_char(self):
         self.assertTrue( is_common_ascii_char("A") )
+        self.assertTrue( is_common_ascii_char("\x0D\x0A") )
         self.assertFalse( is_common_ascii_char("O\N{COMBINING DIAERESIS}") )
         self.assertFalse( is_common_ascii_char("\N{LATIN SMALL LETTER AE}") )
 
