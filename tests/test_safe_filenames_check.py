@@ -24,6 +24,8 @@ import unittest
 import sys
 import os
 from pathlib import PurePath, Path, PurePosixPath
+from tempfile import TemporaryDirectory
+import shutil
 from copy import deepcopy
 from safe_filenames_check import list_problems
 
@@ -45,7 +47,10 @@ class TestSafeFilenamesCheck(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        self.testdir = Path(__file__).parent.resolve()/'bad_win_files'
+        self.tempdir = TemporaryDirectory()
+        self.testdir = Path(self.tempdir.name)/'bad_win_files'
+        self.prevdir = os.getcwd()
+        shutil.copytree( Path(__file__).parent.resolve()/'bad_win_files', self.testdir, symlinks=True )
         os.chdir( self.testdir )
         self.expect_all = sorted( deepcopy( expect ) )
         self.extras = []
@@ -62,8 +67,8 @@ class TestSafeFilenamesCheck(unittest.TestCase):
         self.extras.sort()
 
     def tearDown(self):
-        (self.testdir/'foo.tgz').unlink(missing_ok=True)
-        (self.testdir/'bar.fifo').unlink(missing_ok=True)
+        os.chdir( self.prevdir )
+        self.tempdir.cleanup()
 
     def test_list_problems(self):
         everything = self.expect_all + self.extras

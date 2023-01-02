@@ -25,6 +25,8 @@ import os
 import sys
 from copy import deepcopy
 from pathlib import Path, PurePosixPath
+from tempfile import TemporaryDirectory
+import shutil
 from unzipwalk import unzipwalk, FileType
 
 expect = (
@@ -90,9 +92,12 @@ class TestUnzipWalk(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        self.testdir = Path(__file__).parent.resolve()/'zips'
-        self.expect_all = list( deepcopy( expect ) )
+        self.tempdir = TemporaryDirectory()
+        self.testdir = Path(self.tempdir.name)/'zips'
+        self.prevdir = os.getcwd()
+        shutil.copytree( Path(__file__).parent.resolve()/'zips', self.testdir, symlinks=True )
         os.chdir( self.testdir )
+        self.expect_all = list( deepcopy( expect ) )
         try:
             (self.testdir/'baz.zip').symlink_to('more.zip')
             self.expect_all.append( ( (Path("baz.zip"),), None, FileType.SYMLINK ) )
@@ -106,8 +111,8 @@ class TestUnzipWalk(unittest.TestCase):
         self.expect_all.sort()
 
     def tearDown(self):
-        (self.testdir/'baz.zip').unlink(missing_ok=True)
-        (self.testdir/'xy.fifo').unlink(missing_ok=True)
+        os.chdir( self.prevdir )
+        self.tempdir.cleanup()
 
     def test_unzipwalk(self):
         self.assertEqual(
