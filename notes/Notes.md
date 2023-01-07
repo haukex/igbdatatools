@@ -73,7 +73,7 @@ Some of the reasons I require the latest Python versions:
 
 - Python 3.10
   - newer typing features like union type operator
-  - `zip(..., strict=True)` (though one could use `more_itertools.zip_equal` instead)
+  - `zip(..., strict=True)` (`more_itertools.zip_equal` has been deprecated)
 - Python 3.11
   - `datetime.fromisoformat` is more flexible (e.g. supports trailing `Z`)
 
