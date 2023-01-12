@@ -5,6 +5,7 @@ coverage run --branch -m unittest "$@"
 if coverage report --skip-covered --show-missing --fail-under=100
 then
 	coverage erase
+	git clean -xf htmlcov
 else
 	coverage html
 fi
