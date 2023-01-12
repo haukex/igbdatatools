@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Library to recrsively read compressed files.
+"""Library to recursively read compressed files.
 
 Author, Copyright, and License
 ------------------------------
