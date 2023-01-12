@@ -31,8 +31,6 @@ def deltaparse(string :str) -> int:
     Parses strings such as "2h 5m", "5d 30h 5s", etc. into seconds. Values
     without units are considered seconds. Values are summed, e.g. "40 5d 3h 2d
     2s" is the same as "7d 3h 42s".
-
-    Copyright (c) 2021-2022 Hauke Daempfling (haukex@zero-g.net).
     """
     if not _validregex.fullmatch(string): raise ValueError("invalid delta string")
     delta_s = 0
