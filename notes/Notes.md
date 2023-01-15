@@ -76,6 +76,7 @@ Some of the reasons I require the latest Python versions:
   - `zip(..., strict=True)` (`more_itertools.zip_equal` has been deprecated)
 - Python 3.11
   - `datetime.fromisoformat` is more flexible (e.g. supports trailing `Z`)
+  - `contextlib.chdir`
 
 
 Author, Copyright, and License

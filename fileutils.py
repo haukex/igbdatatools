@@ -52,7 +52,7 @@ def autoglob(files :Iterable[str], *, force :bool=False) -> Generator[str]:
     else:
         yield from files
 
-class Pushd:
+class Pushd:  # pragma: no cover
     """A context manager that temporarily changes the current working directory."""
     def __init__(self, newdir :str|os.PathLike):
         self.newdir = newdir
@@ -63,6 +63,10 @@ class Pushd:
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.chdir(self.prevdir)
         return False  # raise exception if any
+if sys.hexversion>=0x030B00F0:  # available as of Python 3.11
+    import contextlib
+    Pushd = contextlib.chdir  #TODO Later: can probably deprecate our Pushd in favor of this
+else: pass  # pragma: no cover
 
 def filetypestr(st :os.stat_result) -> str:
     """Return a string naming the file type reported by ``stat``."""
