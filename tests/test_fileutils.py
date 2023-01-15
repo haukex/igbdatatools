@@ -142,7 +142,7 @@ class TestFileUtils(unittest.TestCase):
                 self.assertEqual(fh.read(), b"Hellu, Wurld")
 
             # Already open handle
-            if sys.platform.startswith('win32'):
+            if sys.platform.startswith('win32'):  # pragma: no cover
                 print(f"Skipping test with open file", file=sys.stderr)
                 expect = "Hellu, Wurld"
             else:
@@ -165,15 +165,16 @@ class TestFileUtils(unittest.TestCase):
             with open(tf.name) as fh:
                 self.assertEqual(fh.read(), expect)
 
+            # Test errors
+            with self.assertRaises(TypeError):
+                # noinspection PyTypeChecker
+                with replacer(bytes()): pass
+            with self.assertRaises(ValueError):
+                with replacer(Path(tf.name).parent): pass
+
         finally:
             os.unlink(tf.name)
-
-        # Test errors
-        with self.assertRaises(TypeError):
-            # noinspection PyTypeChecker
-            with replacer(bytes()): pass
-        with self.assertRaises(ValueError):
-            with replacer(Path(tf.name).parent): pass
+            del tf
 
         # Permissions test
         if not sys.platform.startswith('win32'):
@@ -182,13 +183,15 @@ class TestFileUtils(unittest.TestCase):
                     print("Hello\nWorld!", file=tf)
                 orig_ino = os.stat(tf.name).st_ino
                 os.chmod(tf.name, 0o741)
-                with replacer(tf.name): pass
+                with replacer(tf.name) as (_, ofh): pass
+                self.assertFalse( os.path.exists(ofh.name) )
                 st = os.stat(tf.name)
                 self.assertNotEqual( st.st_ino, orig_ino )
                 self.assertEqual( stat.S_IMODE(st.st_mode), 0o741 )
             finally:
                 os.unlink(tf.name)
-        else:
+                del tf
+        else:   # pragma: no cover
             print(f"Skipping chmod test", file=sys.stderr)
 
 if __name__ == '__main__':  # pragma: no cover
