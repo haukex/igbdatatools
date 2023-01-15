@@ -121,6 +121,7 @@ def replacer(file :str|os.PathLike|io.IOBase|typing.IO, *, binary :bool=False, e
 
     If you supply a file object, then the file must be open for reading, must exist in the filesystem, and
     the options ``binary``, ``encoding``, ``errors``, and ``newline`` only apply to the output handle.
+    Note that replacing over an open file does not work on Windows.
     """
     if isinstance(file, str|os.PathLike):
         fname = Path(file).resolve(strict=True)

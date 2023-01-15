@@ -142,14 +142,19 @@ class TestFileUtils(unittest.TestCase):
                 self.assertEqual(fh.read(), b"Hellu, Wurld")
 
             # Already open handle
-            with open(tf.name) as ifh:
-                with replacer(ifh) as (_, ofh):
-                    data = ifh.read()
-                    data = data.replace("l","i")
-                    ofh.write(data)
+            if sys.platform.startswith('win32'):
+                print(f"Skipping test with open file", file=sys.stderr)
+                expect = "Hellu, Wurld"
+            else:
+                expect = "Heiiu, Wurid"
+                with open(tf.name) as ifh:
+                    with replacer(ifh) as (_, ofh):
+                        data = ifh.read()
+                        data = data.replace("l","i")
+                        ofh.write(data)
             self.assertFalse( os.path.exists(ofh.name) )
             with open(tf.name) as fh:
-                self.assertEqual(fh.read(), "Heiiu, Wurid")
+                self.assertEqual(fh.read(), expect)
 
             # Failure inside of context
             with self.assertRaises(ProcessLookupError):
@@ -158,7 +163,7 @@ class TestFileUtils(unittest.TestCase):
                     raise ProcessLookupError("blam!")
             self.assertFalse( os.path.exists(ofh.name) )
             with open(tf.name) as fh:
-                self.assertEqual(fh.read(), "Heiiu, Wurid")
+                self.assertEqual(fh.read(), expect)
 
         finally:
             os.unlink(tf.name)
@@ -171,17 +176,20 @@ class TestFileUtils(unittest.TestCase):
             with replacer(Path(tf.name).parent): pass
 
         # Permissions test
-        try:
-            with NamedTemporaryFile('w', delete=False) as tf:
-                print("Hello\nWorld!", file=tf)
-            orig_ino = os.stat(tf.name).st_ino
-            os.chmod(tf.name, 0o741)
-            with replacer(tf.name): pass
-            st = os.stat(tf.name)
-            self.assertNotEqual( st.st_ino, orig_ino )
-            self.assertEqual( stat.S_IMODE(st.st_mode), 0o741 )
-        finally:
-            os.unlink(tf.name)
+        if not sys.platform.startswith('win32'):
+            try:
+                with NamedTemporaryFile('w', delete=False) as tf:
+                    print("Hello\nWorld!", file=tf)
+                orig_ino = os.stat(tf.name).st_ino
+                os.chmod(tf.name, 0o741)
+                with replacer(tf.name): pass
+                st = os.stat(tf.name)
+                self.assertNotEqual( st.st_ino, orig_ino )
+                self.assertEqual( stat.S_IMODE(st.st_mode), 0o741 )
+            finally:
+                os.unlink(tf.name)
+        else:
+            print(f"Skipping chmod test", file=sys.stderr)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
