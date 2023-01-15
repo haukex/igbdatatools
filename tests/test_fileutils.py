@@ -23,9 +23,10 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import unittest
 import sys
 import os
+import stat
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from fileutils import to_Paths, autoglob, Pushd, filetypestr, is_windows_filename_bad
+from tempfile import TemporaryDirectory, NamedTemporaryFile
+from fileutils import to_Paths, autoglob, Pushd, filetypestr, is_windows_filename_bad, replacer
 
 class TestFileUtils(unittest.TestCase):
 
@@ -115,6 +116,72 @@ class TestFileUtils(unittest.TestCase):
         self.assertTrue( is_windows_filename_bad("Com1.tar.gz") )
         self.assertTrue( is_windows_filename_bad("Hello.txt ") )
         self.assertTrue( is_windows_filename_bad("Hello.txt.") )
+
+    def test_replacer(self):
+        try:
+            # Basic Test
+            with NamedTemporaryFile('w', delete=False) as tf:
+                print("Hello\nWorld!", file=tf)
+            with replacer(tf.name) as (ifh, ofh):
+                for line in ifh:
+                    line = line.replace('o', 'u')
+                    print(line, end='', file=ofh)
+            self.assertFalse( os.path.exists(ofh.name) )
+            with open(tf.name) as fh:
+                self.assertEqual(fh.read(), "Hellu\nWurld!\n")
+
+            # Binary
+            with open(tf.name, 'wb') as fh:
+                fh.write(b"Hello, World")
+            with replacer(tf.name, binary=True) as (ifh, ofh):
+                data = ifh.read()
+                data = data.replace(b"o", b"u")
+                ofh.write(data)
+            self.assertFalse( os.path.exists(ofh.name) )
+            with open(tf.name, 'rb') as fh:
+                self.assertEqual(fh.read(), b"Hellu, Wurld")
+
+            # Already open handle
+            with open(tf.name) as ifh:
+                with replacer(ifh) as (_, ofh):
+                    data = ifh.read()
+                    data = data.replace("l","i")
+                    ofh.write(data)
+            self.assertFalse( os.path.exists(ofh.name) )
+            with open(tf.name) as fh:
+                self.assertEqual(fh.read(), "Heiiu, Wurid")
+
+            # Failure inside of context
+            with self.assertRaises(ProcessLookupError):
+                with replacer(tf.name) as (ifh, ofh):
+                    ofh.write("oops")
+                    raise ProcessLookupError("blam!")
+            self.assertFalse( os.path.exists(ofh.name) )
+            with open(tf.name) as fh:
+                self.assertEqual(fh.read(), "Heiiu, Wurid")
+
+        finally:
+            os.unlink(tf.name)
+
+        # Test errors
+        with self.assertRaises(TypeError):
+            # noinspection PyTypeChecker
+            with replacer(bytes()): pass
+        with self.assertRaises(ValueError):
+            with replacer(Path(tf.name).parent): pass
+
+        # Permissions test
+        try:
+            with NamedTemporaryFile('w', delete=False) as tf:
+                print("Hello\nWorld!", file=tf)
+            orig_ino = os.stat(tf.name).st_ino
+            os.chmod(tf.name, 0o741)
+            with replacer(tf.name): pass
+            st = os.stat(tf.name)
+            self.assertNotEqual( st.st_ino, orig_ino )
+            self.assertEqual( stat.S_IMODE(st.st_mode), 0o741 )
+        finally:
+            os.unlink(tf.name)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

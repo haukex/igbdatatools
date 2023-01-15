@@ -23,7 +23,11 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import os
 import stat
 import sys
+import io
+import typing
 from pathlib import Path
+from contextlib import contextmanager, nullcontext
+from tempfile import NamedTemporaryFile
 from collections.abc import Generator, Iterable
 
 AnyPaths = str|bytes|os.PathLike|Iterable[str|bytes|os.PathLike]
@@ -103,3 +107,41 @@ def is_windows_filename_bad(fn :str) -> bool:
         or any( fn.upper().startswith(x+".") for x in invalidnames )
         # filenames shouldn't end on a space or period
         or fn[-1] in (' ', '.') )
+
+@contextmanager
+def replacer(file :str|os.PathLike|io.IOBase|typing.IO, *, binary :bool=False, encoding=None, errors=None, newline=None):
+    """Replace a file by renaming a temporary file over the original.
+
+    With this context manager, a temporary file is created in the same directory as the original file.
+    The context manager gives you two file handles: the input file, and the output file, the latter
+    being the temporary file. You can then read from the input file and write to the output file.
+    When the context manager is exited, it will replace the input file over the temporary file.
+    Depending on the OS and file system, this ``os.replace`` may be an atomic operation.
+    If an error occurs in the context manager, the temporary file is unlinked and the original file left unchanged.
+
+    If you supply a file object, then the file must be open for reading, must exist in the filesystem, and
+    the options ``binary``, ``encoding``, ``errors``, and ``newline`` only apply to the output handle.
+    """
+    if isinstance(file, str|os.PathLike):
+        fname = Path(file).resolve(strict=True)
+        if not fname.is_file(): raise ValueError(f"not a regular file: {fname}")
+        icm = fname.open(
+            mode = 'rb' if binary else 'r', encoding=encoding, errors=errors, newline=newline)
+    elif isinstance(file, io.IOBase|typing.IO):
+        fname = Path(file.name).resolve(strict=True)
+        icm = nullcontext(file)
+    else: raise TypeError(f"file must be a filename or a file object, not {repr(file)}")
+    with icm as infh:
+        origmode = stat.S_IMODE( os.stat(infh.fileno()).st_mode )
+        with NamedTemporaryFile( dir=fname.parent, prefix="."+fname.name+"_", delete=False,
+            mode = 'wb' if binary else 'w', encoding=encoding, errors=errors, newline=newline) as tf:
+            try:
+                yield infh, tf
+            except Exception:
+                tf.close()
+                os.unlink(tf.name)
+                raise
+    # note because any exceptions are reraised above, we can only get here on success:
+    try: os.chmod(tf.name, origmode)
+    except NotImplementedError: pass  # pragma: no cover
+    os.replace(tf.name, fname)
