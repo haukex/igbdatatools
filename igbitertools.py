@@ -20,7 +20,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
-from collections.abc import Sized, Iterator, Iterable
+from collections.abc import Sized, Iterator, Iterable, Callable
 from typing import TypeVar, Generic
 
 def gray_product(*iterables):
@@ -60,23 +60,26 @@ def gray_product(*iterables):
             f[j+1] = j+1
 
 _T = TypeVar('_T', covariant=True)
-class SizedIterator(Generic[_T], Sized, Iterator[_T]):
+class SizedCallbackIterator(Generic[_T], Sized, Iterator[_T]):
     """Wrapper to add ``len`` support to an iterator.
 
     For example, this can be used to wrap a generator which has a known output length
     (e.g. if it returns exactly one item per input item), so that it can then
     be used in libraries like ``tqdm``."""
-    def __init__(self, it :Iterable[_T], length :int, *, strict :bool=False):
+    def __init__(self, it :Iterable[_T], length :int, *, strict :bool=False, callback :Callable[[int, _T], None]=None):
         if length<0: raise ValueError("length must be >= 0")
         self.it = iter(it)
         self.length = length
         self._count = 0
         self.strict = strict
+        self.callback = callback
     def __len__(self) -> int: return self.length
     def __iter__(self) -> Iterator[_T]: return self
     def __next__(self) -> _T:
         try:
             val :_T = next(self.it)
+            if self.callback:
+                self.callback(self._count, val)
             self._count += 1
         except StopIteration:
             if self.strict and self._count != self.length:

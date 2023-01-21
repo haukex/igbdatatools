@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 import unittest
-from igbitertools import gray_product, no_duplicates, SizedIterator
+from igbitertools import gray_product, no_duplicates, SizedCallbackIterator
 from itertools import product
 
 class TestIgbItertools(unittest.TestCase):
@@ -45,27 +45,37 @@ class TestIgbItertools(unittest.TestCase):
         iters = ( ("a","b"), range(3,6), [None, None], {"i","j","k","l"}, "XYZ" )
         self.assertEqual( sorted( product(*iters) ), sorted( gray_product(*iters) ) )
 
-    def test_sized_iterator(self):
+    def test_sized_cb_iterator(self):
         def gen(x):
             for i in range(x): yield i
         g = gen(10)
         with self.assertRaises(TypeError):
             # noinspection PyTypeChecker
             self.assertNotEqual(len(g), 10)
-        it = SizedIterator(g, 10)
+        cbvals = []
+        it = SizedCallbackIterator(g, 10, callback=lambda *a: cbvals.append(a))
         self.assertEqual(len(it), 10)
         self.assertEqual(iter(it), it)
         self.assertEqual(list(it), [0,1,2,3,4,5,6,7,8,9])
+        self.assertEqual(cbvals, [(0,0), (1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7), (8,8), (9,9)])
         with self.assertRaises(ValueError):
-            SizedIterator(range(1), -1)
+            SizedCallbackIterator(range(1), -1)
         # strict on
         self.assertEqual(
-            list( SizedIterator(gen(10), 10, strict=True) ),
+            list(SizedCallbackIterator(gen(10), 10, strict=True)),
             [0,1,2,3,4,5,6,7,8,9] )
         with self.assertRaises(ValueError):
-            list( SizedIterator(gen(10), 11, strict=True) )
+            list(SizedCallbackIterator(gen(10), 11, strict=True))
         with self.assertRaises(ValueError):
-            list( SizedIterator(gen(10), 9, strict=True) )
+            list(SizedCallbackIterator(gen(10), 9, strict=True))
+        # another callback test
+        def gen2(x):
+            for i in range(x): yield chr(ord('a') + i) * (i+1)
+        cbvals.clear()
+        it2 = SizedCallbackIterator(gen2(6), 6, callback=lambda *a: cbvals.append(a))
+        self.assertEqual(len(it2), 6)
+        self.assertEqual(list(it2), ['a', 'bb', 'ccc', 'dddd', 'eeeee', 'ffffff'])
+        self.assertEqual(cbvals, [(0,'a'), (1,'bb'), (2,'ccc'), (3,'dddd'), (4,'eeeee'), (5,'ffffff')] )
 
     def test_no_duplicates(self):
         in1 = ( "foo", "bar", "quz", 123 )
