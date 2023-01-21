@@ -77,6 +77,7 @@ Some of the reasons I require the latest Python versions:
 - Python 3.11
   - `datetime.fromisoformat` is more flexible (e.g. supports trailing `Z`)
   - `contextlib.chdir`
+  - `typing.Self`
 
 
 Author, Copyright, and License

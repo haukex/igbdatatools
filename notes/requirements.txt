@@ -12,6 +12,9 @@
 # https://pydantic-docs.helpmanual.io/usage/validation_decorator/
 pydantic
 
+# https://mypy.readthedocs.io/
+mypy
+
 # https://coverage.readthedocs.io/en/latest/cmd.html
 coverage
 
@@ -26,6 +29,12 @@ python-dateutil
 
 # https://pypi.org/project/autopep8/
 autopep8
+
+# https://flake8.pycqa.org/
+flake8
+
+# https://black.readthedocs.io/
+black
 
 # apparently needed on Windows and not necessarily on *NIX?
 tzdata
