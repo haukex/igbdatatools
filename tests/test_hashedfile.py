@@ -25,7 +25,7 @@ import os
 import hashlib
 from pathlib import Path, PurePath
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from hashedfile import HashedFile, hashes_to_file, hashes_from_file, DEFAULT_HASH
+from hashedfile import HashedFile, hashes_to_file, hashes_from_file, DEFAULT_HASH, sort_hashedfiles, SortingType
 
 class TestHashedFile(unittest.TestCase):
 
@@ -161,6 +161,47 @@ class TestHashedFile(unittest.TestCase):
             self.assertEqual(hsh1, hsh2)
         finally:
             os.unlink(tf.name)
+
+    def test_sort_hashedfiles(self):
+        lines = (
+            "f6a6263167c92de8644ac998b3c4e4d1 *baz.txt",
+            "f6a6263167c92de8644ac998b3c4e4d1  quz.txt",
+            "fa0903293ec8fc1f19087d0eb2ffded8 *bar.txt",
+            "f6a6263167c92de8644ac998b3c4e4d1 *bla.txt",
+            "c36e60f574001ef3de0a551f950bdb39 *foo.txt" )
+        self.assertEqual( sorted(lines), [
+            "c36e60f574001ef3de0a551f950bdb39 *foo.txt",
+            "f6a6263167c92de8644ac998b3c4e4d1  quz.txt",
+            "f6a6263167c92de8644ac998b3c4e4d1 *baz.txt",
+            "f6a6263167c92de8644ac998b3c4e4d1 *bla.txt",
+            "fa0903293ec8fc1f19087d0eb2ffded8 *bar.txt" ] )
+        samp = tuple(map(HashedFile.from_line, lines))
+        self.assertEqual( list(sort_hashedfiles(samp, SortingType.NO_SORT)),
+            list(samp) )
+        self.assertEqual( list(sort_hashedfiles(samp, SortingType.BY_LINE)),
+            list(map(HashedFile.from_line, (
+                "c36e60f574001ef3de0a551f950bdb39 *foo.txt",
+                "f6a6263167c92de8644ac998b3c4e4d1 *baz.txt",
+                "f6a6263167c92de8644ac998b3c4e4d1 *bla.txt",
+                "f6a6263167c92de8644ac998b3c4e4d1  quz.txt",
+                "fa0903293ec8fc1f19087d0eb2ffded8 *bar.txt" ))) )
+        self.assertEqual( list(sort_hashedfiles(samp, SortingType.BY_HASH)),
+            list(map(HashedFile.from_line, (
+                "c36e60f574001ef3de0a551f950bdb39 *foo.txt",
+                "f6a6263167c92de8644ac998b3c4e4d1 *baz.txt",
+                "f6a6263167c92de8644ac998b3c4e4d1  quz.txt",
+                "f6a6263167c92de8644ac998b3c4e4d1 *bla.txt",
+                "fa0903293ec8fc1f19087d0eb2ffded8 *bar.txt" ))) )
+        self.assertEqual( list(sort_hashedfiles(samp, SortingType.BY_FILE)),
+            list(map(HashedFile.from_line, (
+                "fa0903293ec8fc1f19087d0eb2ffded8 *bar.txt",
+                "f6a6263167c92de8644ac998b3c4e4d1 *baz.txt",
+                "f6a6263167c92de8644ac998b3c4e4d1 *bla.txt",
+                "c36e60f574001ef3de0a551f950bdb39 *foo.txt",
+                "f6a6263167c92de8644ac998b3c4e4d1  quz.txt" ))) )
+        with self.assertRaises(ValueError):
+            # noinspection PyTypeChecker
+            list(sort_hashedfiles(samp, None))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

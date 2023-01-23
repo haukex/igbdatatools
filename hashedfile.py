@@ -23,7 +23,9 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import io
 import re
 import hashlib
+import operator
 from os import PathLike
+from enum import Enum
 from typing import Self, NamedTuple
 from collections.abc import Iterable, Generator
 
@@ -149,6 +151,28 @@ def hashes_from_file(file :str|PathLike) -> Generator[HashedFile]:
     with open(file) as fh:
         for line in fh:
             yield HashedFile.from_line(line)
+
+class SortingType(Enum):
+    """Argument for :func:`sort_hashed_files`."""
+    NO_SORT = 0
+    BY_LINE = 1
+    BY_HASH = 2
+    BY_FILE = 3
+
+def sort_hashedfiles(hfs :Iterable[HashedFile], sort :SortingType) -> Generator[HashedFile]:
+    """Sort ``HashedFile``s by different schemes.
+
+    Note that for all ``SortingType``s other than ``NO_SORT``, this generator
+    has to consume the entire input before producing the output.
+
+    The difference between ``BY_HASH`` and ``BY_LINE`` is that the latter sorts
+    on hashes first and filenames second, while ignoring ``HashedFile.binflag``.
+    """
+    if sort==SortingType.NO_SORT: yield from hfs
+    elif sort==SortingType.BY_LINE: yield from sorted(hfs, key=operator.itemgetter(1, 0))
+    elif sort==SortingType.BY_HASH: yield from sorted(hfs, key=operator.itemgetter(1))
+    elif sort==SortingType.BY_FILE: yield from sorted(hfs, key=operator.itemgetter(0))
+    else: raise ValueError(repr(sort))
 
 if __name__ == '__main__':  # pragma: no cover
     raise RuntimeError("this is purely a library, not runnable")
