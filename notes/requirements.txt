@@ -24,6 +24,9 @@ deprecation
 # https://pypi.org/project/more-itertools/
 more-itertools
 
+# https://pypi.org/project/ordered-enum/
+ordered_enum
+
 # https://dateutil.readthedocs.io/
 python-dateutil
 
