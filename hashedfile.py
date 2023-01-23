@@ -87,18 +87,23 @@ class HashedFile(NamedTuple):
         """Return a line representing this object."""
         return self.hsh.hex() + " " + ("*" if self.binflag else " ") + str(self.fn)
 
-    def validate(self, *, force :bool=False, fail_soft :bool=False) -> Self:
+    def validate(self, *, force :bool=False, fail_soft :bool=False) -> Self|tuple[Self, bytes]:
         """Validate whether this object's hash matches the hash of the file in the filesystem.
 
         Does **not** modify this object but returns a new one!
+
+        If you set ``fail_soft``, then on success, this function will return a two-item tuple consisting of
+        the original object with ``valid`` set to ``False``, and the hash that was calculated from the file.
 
         The ``binflag`` is ignored and not modified."""
         if self.valid and not force: return self
         gothsh = self.hash_file(self.fn, algo=self.algo)
         if gothsh != self.hsh:
-            if fail_soft: return self._replace(valid=False)
+            if fail_soft: return self._replace(valid=False), gothsh
             else: raise ValueError(f"failed to validate {self.fn}: expected {self.hsh.hex()}, got {gothsh.hex()}")
-        else: return self._replace(valid=True)
+        else:
+            if fail_soft: return self._replace(valid=True), gothsh
+            else: return self._replace(valid=True)
 
     @property
     def algo(self):
