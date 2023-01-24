@@ -206,3 +206,8 @@ Pillow
 # https://mrjean1.github.io/PyGeodesy/
 PyGeodesy
 
+# ##### My Modules #####
+
+# https://pypi.org/project/sleep-until/
+# https://github.com/haukex/sleep_until
+sleep_until; sys_platform == 'linux'
