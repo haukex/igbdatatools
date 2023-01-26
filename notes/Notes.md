@@ -44,6 +44,14 @@ Installing Python on Linux
     mv python-3.11.1-docs-html /opt/python3/html
     find /opt/python3/html -type d -exec chmod 755 '{}' + -o -exec chmod 644 '{}' +
 
+If building on an old Ubuntu LTS like 18.04 (bionic), see <https://github.com/python/cpython/issues/98973>:
+the `./configure` step needs to be prefixed with `TCLTK_LIBS="-ltk8.6 -ltcl8.6" TCLTK_CFLAGS="-I/usr/include/tcl8.6"`
+for tkinter to work (look for `checking for stdlib extension module _tkinter... yes`)
+
+An alternative I haven't tested yet: <https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa>
+
+    sudo add-apt-repository ppa:deadsnakes/ppa
+
 Windows Notes
 -------------
 
