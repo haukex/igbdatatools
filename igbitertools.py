@@ -78,14 +78,15 @@ class SizedCallbackIterator(Generic[_T], Sized, Iterator[_T]):
     def __next__(self) -> _T:
         try:
             val :_T = next(self.it)
+        except StopIteration as ex:
+            if self.strict and self._count != self.length:
+                raise ValueError(f"expected iterator to return {self.length} items, but it returned {self._count}") from ex
+            raise ex
+        else:
             if self.callback:
                 self.callback(self._count, val)
             self._count += 1
-        except StopIteration:
-            if self.strict and self._count != self.length:
-                raise ValueError(f"expected iterator to return {self.length} items, but it returned {self._count}")
-            raise
-        return val
+            return val
 
 def no_duplicates(iterable, *, key=None, name="item"):
     """Raise a ``ValueError`` if there are any duplicate elements in the
