@@ -96,9 +96,14 @@ class HashedFile(NamedTuple):
 
         If you set ``fail_soft``, then on success, this function will return a two-item tuple consisting of
         the original object with ``valid`` set to ``False``, and the hash that was calculated from the file.
+        *Warning:* If ``fail_soft`` is true and ``force`` is false, and this object's ``valid`` flag is
+        already set to ``True``, then no hashing on the disk is performed, and the second item of the returned
+        tuple will simply be this hash's precomputed hash value. To always go out to the disk, set ``force``.
 
         The ``binflag`` is ignored and not modified."""
-        if self.valid and not force: return self
+        if self.valid and not force:
+            if fail_soft: return self, self.hsh
+            else: return self
         gothsh = self.hash_file(self.fn, algo=self.algo)
         if gothsh != self.hsh:
             if fail_soft: return self._replace(valid=False), gothsh

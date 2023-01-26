@@ -95,6 +95,9 @@ class TestHashedFile(unittest.TestCase):
         self.assertEqual( hf2.hsh, actualhsh )
         self.assertTrue( hf2vs.valid )
         self.assertTrue( hf2vs.binflag )
+        hf2vs2, actualhsh2 = hf2vs.validate(fail_soft=True)
+        self.assertIs( hf2vs, hf2vs2 )
+        self.assertEqual( hf2vs2.hsh, hf2.hsh )
         bag = { hf1, hf2 }
         self.assertEqual( len(bag), 1 )
         self.assertEqual( bag.pop(), hf2v )
