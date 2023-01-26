@@ -167,8 +167,9 @@ class SortingType(Enum):
 def sort_hashedfiles(hfs :Iterable[HashedFile], sort :SortingType) -> Generator[HashedFile]:
     """Sort ``HashedFile``s by different schemes.
 
-    Note that for all ``SortingType``s other than ``NO_SORT``, this generator
-    has to consume the entire input before producing the output.
+    Note that for all ``SortingType``s other than ``NO_SORT``, ``sorted``
+    has to consume the entire input before producing the output, however,
+    ``sorted`` isn't run until this generator is actually run for the first time.
 
     The difference between ``BY_HASH`` and ``BY_LINE`` is that the latter sorts
     on hashes first and filenames second, while ignoring ``HashedFile.binflag``.

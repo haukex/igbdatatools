@@ -206,5 +206,25 @@ class TestHashedFile(unittest.TestCase):
             # noinspection PyTypeChecker
             list(sort_hashedfiles(samp, None))
 
+    def test_sorted_gen(self):
+        """Test for a statement in the documentation of ``sort_hashedfiles``."""
+        ops = []
+        def foo():
+            for x in (5,2,9,0,1,6,4,3,8,7):
+                ops.append('yield')
+                yield x
+        def bar(inp):
+            ops.append('bar')
+            yield from sorted(inp)
+        ops.append('one')
+        one = foo()
+        ops.append('two')
+        two = bar(one)
+        ops.append('three')
+        three = list(two)
+        ops.append('four')
+        self.assertEqual( three, list(range(10)) )
+        self.assertEqual( ops, ['one', 'two', 'three', 'bar'] + ['yield']*10 + ['four'] )
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
