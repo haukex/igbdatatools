@@ -6,3 +6,4 @@ regex
 pyicu  # sudo apt-get build-dep python3-icu; Windows: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyicu
 ordered_enum
 tqdm
+numpy
