@@ -105,11 +105,13 @@ unishox2-py3
 #pysqlite3
 pysqlite3-binary; sys_platform != 'win32'
 
-# https://jschon.readthedocs.io/en/stable/usage/start.html
+# https://jschon.readthedocs.io/en/stable/
 jschon
-# TODO: test jsonschema instead of jschon?
+# A bit of research seems to indicate that while several JSON Schema validators
+# are actively maintainued, jschon seems to currently be the most complete?
+# https://json-schema.org/implementations.html#validator-python
 # https://python-jsonschema.readthedocs.io/en/stable/
-jsonschema
+#jsonschema
 
 # https://github.com/ultrajson/ultrajson
 ujson

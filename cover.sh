@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
-coverage run --branch -m unittest "$@"
+coverage run --branch -m unittest -v "$@"
 if coverage report --skip-covered --show-missing --fail-under=100
 then
 	coverage erase
