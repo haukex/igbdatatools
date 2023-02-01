@@ -1,0 +1,23 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://squid.igb-berlin.de/igbdatatools/schema_for_tests",
+	"$comment": "http://json-schema.org/understanding-json-schema/index.html",
+	"$defs": {
+		"ident":   { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]+$" }
+	},
+	"type": "object",
+	"properties": {
+      "foo": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/ident" },
+          "additionalProperties": { "type": "string" }
+      },
+      "bar": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "uniqueItems": true
+      }
+    },
+	"required": [ "foo" ],
+	"additionalProperties": false
+}
