@@ -33,6 +33,13 @@ _base_allowed_chars = frozenset( set(uniutils.common_ascii) - fileutils.invalidc
 
 def list_problems(paths :AnyPaths, *, ignore_compressed :bool = False, ignore_symlinks :bool = False,
         allowed_chars :set[str] = None ) -> Generator[tuple[tuple[PurePath, ...], str]]:
+    """This function walks a directory tree, including entering compressed files, and checks whether all filenames
+    encountered are safe to use in a Windows environment.
+
+    This generator yields a tuple for each problem found. The first element is a tuple of filenames like the
+    one returned by ``unzipwalk``. The second element is a string describing the problem.
+
+    ``allowed_chars`` may be a set of characters which are allowed in filenames in addition to basic ASCII."""
     allowed = _base_allowed_chars
     if allowed_chars: allowed |= allowed_chars
     collections :dict[tuple[PurePath], set[str]] = defaultdict(set)
@@ -92,7 +99,7 @@ if __name__ == '__main__':  # pragma: no cover
     parser.add_argument('paths', help="paths to check", nargs="*")
     args = parser.parse_args()
     pths = autoglob(args.paths) if args.paths else Path()
-    allowedchars = set(args.allowed_chars)
+    allowedchars = set(''.join(args.allowed_chars))
     if args.german: allowedchars |= set("äüöÄÜÖßẞÉé")  # added eacute for e.g. Café (somewhat common in German)
     # excluded Ææ in the following because it's rare in French but somewhat common in Mojibake
     if args.french: allowedchars |= set("ÀàÂâÇçÉéÈèÊêËëÎîÏïÔôŒœÙùÛûÜüŸÿ")
