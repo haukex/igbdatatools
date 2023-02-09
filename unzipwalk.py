@@ -20,6 +20,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
+import stat
 from enum import Enum
 from gzip import GzipFile
 from itertools import chain
@@ -58,7 +59,12 @@ def _procfile(fns :Sequence[PurePath], fh :typing.IO[bytes]|GzipFile) \
                 # Note the ZIP specification requires forward slashes for pathnames.
                 # https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
                 newname = (*fns, PurePosixPath(zi.filename))
-                if zi.is_dir(): yield newname, None, FileType.DIR
+                # Manually detect symlinks in ZIP files (should be rare anyway)
+                # e.g. from zipfile.py: zinfo.external_attr = (st.st_mode & 0xFFFF) << 16
+                # we're not going to worry about other special file types in ZIP files
+                if zi.create_system==3 and stat.S_ISLNK(zi.external_attr>>16):  # 3 is UNIX
+                    yield newname, None, FileType.SYMLINK
+                elif zi.is_dir(): yield newname, None, FileType.DIR
                 else:  # (note this interface doesn't have an is_file)
                     with zf.open(zi) as fh2:
                         yield from _procfile(newname, fh2)
@@ -99,8 +105,7 @@ def unzipwalk(paths :AnyPaths, *, onlyfiles :bool=True) \
         (...)
         [...]
 
-    Currently supported are ZIP, tar, tar+gz, and gz compressed files. Symlinks in ZIP files are (currently) not
-    supported by ``zipfile`` and will be reported as regular files with the file contents being the link target.
+    Currently supported are ZIP, tar, tar+gz, and gz compressed files.
     """
     paths = tuple(to_Paths(paths))
     for p in paths: p.resolve(strict=True)  # force FileNotFound errors early

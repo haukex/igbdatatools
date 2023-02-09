@@ -59,8 +59,7 @@ expect = (
     ( (Path("linktest.zip"), PurePosixPath("linktest/") ), None, FileType.DIR ),
     ( (Path("linktest.zip"), PurePosixPath("linktest/hello.txt")),
         b"Hi there\n", FileType.FILE ),
-    ( (Path("linktest.zip"), PurePosixPath("linktest/world.txt")),
-        b"hello.txt", FileType.FILE ),  # this is what zipinfo returns for symlinks
+    ( (Path("linktest.zip"), PurePosixPath("linktest/world.txt")), None, FileType.SYMLINK ),
     ( (Path("more.zip"),), None, FileType.ARCHIVE ),
     ( (Path("more.zip"), PurePosixPath("more/")), None, FileType.DIR ),
     ( (Path("more.zip"), PurePosixPath("more/stuff/")), None, FileType.DIR ),
