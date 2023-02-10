@@ -23,7 +23,6 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import unittest
 from pathlib import Path
 from loggerdata.metadata import load_logger_metadata, MdBaseCol, MdColumn, MdMapEntry, MdMapping, MappingType, MdTable, Toa5EnvMatch, Metadata, LoggerType, ColumnHeader, MdCollection
-from warnings import catch_warnings
 from zoneinfo import ZoneInfo
 from datetime import datetime, timedelta, timezone
 from datatypes import TimestampNoTz, NonNegInt, Num
@@ -228,14 +227,12 @@ class TestLoggerMetadata(unittest.TestCase):
         with tempcopy(bmd) as md:
             md.tables['foo'].columns[0].var = "foo"
             with self.assertRaises(RuntimeError): md.validate()
-        with catch_warnings(record=True, category=UserWarning) as warns:
+        with self.assertWarns(UserWarning) as wcm:
             load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS","type":"TimestampNoTz"},{"name":"xy","type":"TimestampWithTz"}]}}}')
-            self.assertEqual( len(warns), 1 )
-            self.assertIn( "mixed TimestampNoTz/WithTz types", str(warns[0].message) )
-        with catch_warnings(record=True, category=UserWarning) as warns:
+        self.assertIn("mixed TimestampNoTz/WithTz types", str(wcm.warning))
+        with self.assertWarns(UserWarning) as wcm:
             load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS","type":"TimestampWithTz"}]}}}')
-            self.assertEqual( len(warns), 1 )
-            self.assertIn( "doesn't have a TZ set", str(warns[0].message) )
+        self.assertIn("doesn't have a TZ set", str(wcm.warning))
         with self.assertRaises(ValueError):
             load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS","type":"TimestampNoTz"}]}}}')
         with tempcopy(bmd) as md:
