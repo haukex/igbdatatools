@@ -1,0 +1,60 @@
+{
+	"logger_name": "TestLogger",
+	"toa5_env_match": {
+		"logger_model": "CR1000X",
+		"logger_serial": "12342",
+		"station_name": "TestLogger"
+	},
+	"tz": "UTC",
+	"min_datetime": "2021-06-18 11:00:00",
+	"variants": ["abc", "def"],
+	"sensors": {
+		"acme42": "Acme Pressure and Humidity Sensor #42",
+		"acme532": "Acme Model 532 Air Temperature Sensor"
+	},
+	"tables": {
+		"Daily": {
+			"columns": [
+				{ "name": "TIMESTAMP",   "unit": "TS",                  "type": "TimestampNoTz" },
+				{ "name": "RECORD",      "unit": "RN",                  "type": "NonNegInt"     },
+				{ "name": "BattV_Min",   "unit": "Volts", "prc": "Min", "type": "Num(4,2)"      },
+				{ "name": "BattV_TMn",                    "prc": "TMn", "type": "TimestampNoTz" },
+				{ "name": "PTemp_C_Min", "unit": "Deg C", "prc": "Min", "type": "Num(5,2)",     "plotgrp": "PTemp", "desc": "Panel Temperature Minimum" },
+				{ "name": "PTemp_C_TMn",                  "prc": "TMn", "type": "TimestampNoTz" },
+				{ "name": "PTemp_C_Max", "unit": "Deg C", "prc": "Max", "type": "Num(5,2)",     "plotgrp": "PTemp" },
+				{ "name": "PTemp_C_TMx",                  "prc": "TMx", "type": "TimestampNoTz" }
+			]
+		},
+		"Hourly": {
+			"columns": [
+				{ "name": "TIMESTAMP",   "unit": "TS",                  "type": "TimestampNoTz"              },
+				{ "name": "RECORD",      "unit": "RN",                  "type": "NonNegInt"                  },
+				{ "name": "BattV_Min",   "unit": "Volts", "prc": "Min", "type": "Num(4,2)"                   },
+				{ "name": "PTemp_C_Min", "unit": "Deg C", "prc": "Min", "type": "Num(5,2)",      "plotgrp": "PTemp" },
+				{ "name": "PTemp_C_Max", "unit": "Deg C", "prc": "Max", "type": "Num(5,2)",      "plotgrp": "PTemp" },
+				{ "name": "AirT_C(42)",  "unit": "Deg C", "prc": "Smp", "type": "Num(5,2)",      "var":"abc", "sens": "acme532", "desc": "air temperature single sample only" },
+				{ "name": "AirT_C_Avg",  "unit": "Deg C", "prc": "Avg", "type": "Num(5,2)",      "var":"def", "sens": "acme532", "desc": "air temperature average over sampling period" },
+				{ "name": "RelHumid",    "unit": "%",     "prc": "Smp", "type": "Num(5,2)",                   "sens": "acme42" },
+				{ "name": "BP_mbar_Avg", "unit": "mbar",  "prc": "Avg", "type": "Num(7,3)",      "var":"def", "sens": "acme42" }
+			],
+			"mappings": {
+				"Press_Humid": {
+					"type": "view",
+					"map": [
+						{
+							"old": { "name": "TIMESTAMP",   "unit": "TS"                  },
+							"new": { "name": "Timestamp"                                  }
+						},
+						{
+							"old": { "name": "BP_mbar_Avg", "unit": "mbar",  "prc": "Avg" },
+							"new": { "name": "BPress_Avg",  "unit": "mbar",  "prc": "Avg" }
+						}, {
+							"old": { "name": "RelHumid",    "unit": "%",     "prc": "Smp" },
+							"new": { "name": "RH_Smp",      "unit": "%",     "prc": "Smp" }
+						}
+					]
+				}
+			}
+		}
+	}
+}

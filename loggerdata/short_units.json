@@ -1,0 +1,17 @@
+{
+  "$comment": "This file must be encoded as UTF-8",
+  "meters/second": "m/s",
+  "Deg C": "°C",
+  "oC": "°C",
+  "Volts": "V",
+  "m^3/m^3": "m³/m³",
+  "W/m^2": "W/m²",
+  "Watts/meter^2": "W/m²",
+  "nSec": "ns",
+  "uSec": "μs",
+  "hours": "hr",
+  "micrometer": "μm",
+  "degrees": "°",
+  "Deg": "°",
+  "unitless": ""
+}
