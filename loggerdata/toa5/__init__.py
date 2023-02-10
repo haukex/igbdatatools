@@ -23,8 +23,8 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import csv
 from typing import NamedTuple
 from igbitertools import no_duplicates
-from loggerdata.metadata import ColumnHeader
-from collections.abc import Iterator, Sequence
+from loggerdata.metadata import ColumnHeader, MdTable
+from collections.abc import Iterator, Sequence, Iterable, Generator
 
 class Toa5Error(RuntimeError): pass
 
@@ -67,3 +67,16 @@ def read_header(csvreader :Iterator[Sequence[str]]) -> tuple[EnvironmentLine, tu
     except ValueError as ex: raise Toa5Error(*ex.args)
     columns = tuple( ColumnHeader(*c) for c in zip(field_names, units, proc, strict=True) )
     return EnvironmentLine(**envline_dict), columns
+
+def meta2hdr(tblmd :MdTable) -> Generator[tuple[str, ...]]:
+    yield tuple( ("TOA5", *(getattr(tblmd.parent.toa5_env_match, c) for c in EnvironmentLine._fields if c!='table_name'), tblmd.name) )
+    yield tuple( '' if c.name is None else c.name for c in tblmd.columns )
+    yield tuple( '' if c.unit is None else c.unit for c in tblmd.columns )
+    yield tuple( '' if c.prc  is None else c.prc  for c in tblmd.columns )
+
+def envline_merge(envs :Iterable[EnvironmentLine], *, sep :str='|') -> EnvironmentLine:
+    thesets :dict[str, set[str]] = { k: set() for k in EnvironmentLine._fields }
+    for env in envs:
+        for k in EnvironmentLine._fields:
+            thesets[k].add( getattr(env, k) )
+    return EnvironmentLine(**{ k: sep.join( sorted( thesets[k] ) ) for k in EnvironmentLine._fields })

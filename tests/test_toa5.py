@@ -23,8 +23,21 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import unittest
 import csv
 from pathlib import Path
-from loggerdata.metadata import ColumnHeader
+from loggerdata.metadata import ColumnHeader, load_logger_metadata
 from loggerdata import toa5
+
+expect_daily_meta2hdr = (
+    ("TOA5","TestLogger","CR1000X","12342",None,None,None,"Daily"),
+    ("TIMESTAMP","RECORD","BattV_Min","BattV_TMn","PTemp_C_Min","PTemp_C_TMn","PTemp_C_Max","PTemp_C_TMx"),
+    ("TS","RN","Volts","","Deg C","","Deg C",""),
+    ("","","Min","TMn","Min","TMn","Max","TMx"),
+)
+expect_hourly_meta2hdr = (
+    ("TOA5","TestLogger","CR1000X","12342",None,None,None,"Hourly"),
+    ("TIMESTAMP","RECORD","BattV_Min","PTemp_C_Min","PTemp_C_Max","AirT_C(42)","AirT_C_Avg","RelHumid","BP_mbar_Avg"),
+    ("TS","RN","Volts","Deg C","Deg C","Deg C","Deg C","%","mbar"),
+    ("","","Min","Min","Max","Smp","Avg","Smp","Avg"),
+)
 
 class TestToa5(unittest.TestCase):
 
@@ -67,6 +80,20 @@ class TestToa5(unittest.TestCase):
                 csvrd = csv.reader(fh, strict=True)
                 with self.assertRaises(toa5.Toa5Error):
                     toa5.read_header(csvrd)
+
+    def test_meta2hdr(self):
+        md = load_logger_metadata( Path(__file__).parent / 'TestLogger.json' )
+        self.assertEqual(expect_daily_meta2hdr, tuple(toa5.meta2hdr(md.tables['Daily'])))
+        self.assertEqual(expect_hourly_meta2hdr, tuple(toa5.meta2hdr(md.tables['Hourly'])))
+
+    def test_envline_merge(self):
+        envs = (
+            toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger.CR1X", program_sig="2438", table_name="Daily" ),
+            toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger.CR1X", program_sig="2438", table_name="Hourly"),
+            toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger.CR1X", program_sig="1234", table_name="Hourly"),
+        )
+        self.assertEqual( toa5.envline_merge(envs),
+            toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger.CR1X", program_sig="1234|2438", table_name="Daily|Hourly") )
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
