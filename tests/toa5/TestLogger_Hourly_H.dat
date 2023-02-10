@@ -1,0 +1,7 @@
+"TOA5","TestLogger","CR1000X","12342","CR1000X.Std.03.02","CPU:TestLogger.CR1X","1234","Hourly"
+"TIMESTAMP","RECORD","BattV_Min","PTemp_C_Min","PTemp_C_Max","AirT_C_Avg","RelHumid","BP_mbar_Avg"
+"TS","RN","Volts","Deg C","Deg C","Deg C","%","mbar"
+"","","Min","Min","Max","Avg","Smp","Avg"
+"2021-06-19 10:00:00",23,13.06,36.15,37.62,32.22,32.27,1014.946
+"2021-06-19 11:00:00",24,13.03,37.62,38.44,33.61,27.29,1014.73
+"2021-06-19 12:00:00",25,13.01,38.44,39.09,34.17,27.22,1014.399
