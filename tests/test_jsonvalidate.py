@@ -24,9 +24,21 @@ import unittest
 import pkgutil
 import io
 from pathlib import Path
-from jsonvalidate import load_json_schema, validate_json
+import json
+from types import MappingProxyType
+from jsonvalidate import load_json_schema, validate_json, freeze_json, FrozenEncoder
 
 class TestJsonValidate(unittest.TestCase):
+
+    def test_freeze_json(self):
+        j = '''{"hello":"world","foo":[1,2.3,true,false,null]}'''
+        d = json.loads(j)
+        self.assertEqual( d, {"hello":"world","foo":[1,2.3,True,False,None]} )
+        f = freeze_json(d)
+        self.assertEqual( f, MappingProxyType({"hello":"world","foo":(1,2.3,True,False,None)}) )
+        self.assertEqual( json.dumps(f, cls=FrozenEncoder, separators=(',',':')), j )
+        with self.assertRaises(TypeError): freeze_json(f)
+        with self.assertRaises(TypeError): json.dumps(io.StringIO("x"), cls=FrozenEncoder)
 
     def test_load_validate_json_schema(self):
         schema = load_json_schema( pkgutil.get_data('tests', 'test.schema.json') )

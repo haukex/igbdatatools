@@ -24,8 +24,27 @@ import os
 import io
 import json
 import typing
+from types import MappingProxyType, NoneType
 from pprint import pprint
 import jschon
+
+class FrozenEncoder(json.JSONEncoder):
+    """A JSON encoder that handles ``MappingProxyType``s like those returned from ``freeze_json``."""
+    def default(self, obj):
+        if isinstance(obj, MappingProxyType):
+            return dict(**obj)
+        return super().default(obj)
+
+def freeze_json(obj):
+    """Utility function that "freezes" a JSON data structure into immutable types."""
+    if isinstance(obj, (str, int, float, bytes, NoneType, bool)):
+        return obj
+    elif isinstance(obj, (tuple, list)):
+        return tuple( freeze_json(o) for o in obj )
+    elif isinstance(obj, dict):
+        return MappingProxyType( { k: freeze_json(v) for k, v in obj.items() } )
+    else:
+        raise TypeError(f"I don't handle {type(obj)}")
 
 def load_json(file :str|os.PathLike|io.IOBase|typing.IO|bytes|bytearray):
     """Utility function to load JSON either from a filename, file object, or ``bytes`` object."""
