@@ -1,11 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
-coverage run --branch -m unittest -v "$@"
-if coverage report --skip-covered --show-missing --fail-under=100
+if [ "$OSTYPE" == "msys" ]  # e.g. Git bash on Windows
 then
-	coverage erase
-	git clean -xf htmlcov
+  python3 -m unittest -v "$@"
 else
-	coverage html
+  coverage run --branch -m unittest -v "$@"
+  if coverage report --skip-covered --show-missing --fail-under=100
+  then
+    coverage erase
+    git clean -xf htmlcov
+  else
+    coverage html
+  fi
 fi
