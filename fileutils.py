@@ -128,6 +128,7 @@ def replacer(file :str|os.PathLike|io.IOBase|typing.IO, *, binary :bool=False, e
         if not fname.is_file(): raise ValueError(f"not a regular file: {fname}")
         icm = fname.open(
             mode = 'rb' if binary else 'r', encoding=encoding, errors=errors, newline=newline)
+        assert icm.name == str(fname)
     elif isinstance(file, io.IOBase|typing.IO):
         fname = Path(file.name).resolve(strict=True)
         icm = nullcontext(file)
