@@ -27,6 +27,7 @@ import typing
 from types import MappingProxyType, NoneType
 from pprint import pprint
 import jschon
+from functools import singledispatch
 
 class FrozenEncoder(json.JSONEncoder):
     """A JSON encoder that handles ``MappingProxyType``s like those returned from ``freeze_json``."""
@@ -35,26 +36,30 @@ class FrozenEncoder(json.JSONEncoder):
             return dict(**obj)
         return super().default(obj)
 
+@singledispatch
 def freeze_json(obj):
     """Utility function that "freezes" a JSON data structure into immutable types."""
-    if isinstance(obj, (str, int, float, bytes, NoneType, bool)):
-        return obj
-    elif isinstance(obj, (tuple, list)):
-        return tuple( freeze_json(o) for o in obj )
-    elif isinstance(obj, dict):
-        return MappingProxyType( { k: freeze_json(v) for k, v in obj.items() } )
-    else:
-        raise TypeError(f"I don't handle {type(obj)}")
+    raise TypeError(f"I don't handle {type(obj)}")
+@freeze_json.register
+def _(obj :str|int|float|bytes|bool|NoneType): return obj
+@freeze_json.register
+def _(obj :tuple|list): return tuple( freeze_json(o) for o in obj )
+@freeze_json.register
+def _(obj :dict): return MappingProxyType( { k: freeze_json(v) for k, v in obj.items() } )
 
+@singledispatch
 def load_json(file :str|os.PathLike|io.IOBase|typing.IO|bytes|bytearray):
     """Utility function to load JSON either from a filename, file object, or ``bytes`` object."""
-    if isinstance(file, str|os.PathLike):
-        with open(file) as fh: return json.load(fh)
-    elif isinstance(file, io.IOBase|typing.IO):
-        return json.load(file)
-    elif isinstance(file, bytes|bytearray):
-        return json.load(io.BytesIO(file))
-    else: raise TypeError(f"file must be a filename, file object, or bytes, not {repr(file)}")
+    raise TypeError(f"file must be a filename, file object, or bytes, not {repr(file)}")
+@load_json.register
+def _(file :str|os.PathLike):
+    with open(file) as fh: return json.load(fh)
+@load_json.register
+def _(file :io.IOBase|typing.IO):
+    return json.load(file)
+@load_json.register
+def _(file :bytes|bytearray):
+    return json.load(io.BytesIO(file))
 
 _catalog = jschon.create_catalog('2020-12')
 def load_json_schema(file, *, verbose=False) -> jschon.JSONSchema:

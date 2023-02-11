@@ -24,12 +24,14 @@ import sys
 import re
 from typing import NamedTuple
 from itertools import chain
+from functools import singledispatch
 import unicodedata
 from collections.abc import Generator, Iterable
 # the module resides in the package pyicu, but PyCharm doesn't seem to correctly detect that
 # noinspection PyPackageRequirements
 from icu import BreakIterator, Locale, UnicodeString
 
+@singledispatch
 def graphemeclusters(text :str|UnicodeString, *, locale=Locale.getRoot()) -> Generator[str]:
     """Break a string into grapheme clusters.
 
@@ -40,8 +42,6 @@ def graphemeclusters(text :str|UnicodeString, *, locale=Locale.getRoot()) -> Gen
     - https://unicode-org.github.io/icu-docs/apidoc/released/icu4c/classicu_1_1BreakIterator.html
     - https://gitlab.pyicu.org/main/pyicu/-/blob/main/samples/break.py
     """
-    if not isinstance(text, UnicodeString):
-        text = UnicodeString(text)
     bi = BreakIterator.createCharacterInstance(locale)
     bi.setText(text)
     start = bi.first()
@@ -51,6 +51,9 @@ def graphemeclusters(text :str|UnicodeString, *, locale=Locale.getRoot()) -> Gen
         yield str(text[start:end])
         start = end
     assert end == len(text)
+@graphemeclusters.register
+def _(text :str, *, locale=Locale.getRoot()) -> Generator[str]:
+    yield from graphemeclusters(UnicodeString(text), locale=locale)
 
 common_ascii = bytes(chain((0x09, 0x0A, 0x0D), range(0x20, 0x7F))).decode("ASCII")
 def is_common_ascii_char(char :str) -> bool:

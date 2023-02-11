@@ -27,19 +27,26 @@ import io
 import typing
 from pathlib import Path
 from contextlib import contextmanager, nullcontext
+from functools import singledispatch
 from tempfile import NamedTemporaryFile
 from collections.abc import Generator, Iterable
 
 AnyPaths = str|bytes|os.PathLike|Iterable[str|bytes|os.PathLike]
+@singledispatch
+def _topath(item :str|bytes|os.PathLike):
+    raise TypeError(f"I don't know how to covert this to a Path: {item!r}")
+@_topath.register
+def _(item :bytes): return Path(os.fsdecode(item))
+@_topath.register
+def _(item :str|os.PathLike): return Path(item)
 # noinspection PyPep8Naming
+@singledispatch
 def to_Paths(paths :AnyPaths) -> Generator[Path]:
     """Convert various inputs to ``pathlib.Path`` objects."""
-    def topath(item):
-        if isinstance(item, str|bytes): return Path(os.fsdecode(item))
-        elif isinstance(item, os.PathLike): return Path(item)
-        else: raise TypeError(f"I don't know how to covert this to a Path: {item!r}")
-    if isinstance(paths, str|bytes|os.PathLike): yield topath(paths)
-    else: yield from map(topath, iter(paths))
+    yield from map(_topath, iter(paths))
+@to_Paths.register
+def _(paths :str|bytes|os.PathLike) -> Generator[Path]:
+    yield _topath(paths)
 
 def autoglob(files :Iterable[str], *, force :bool=False) -> Generator[str]:
     """In Windows, automatically apply ``glob`` and ``expanduser``, otherwise don't change the input."""
