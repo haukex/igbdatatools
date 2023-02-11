@@ -119,7 +119,7 @@ class TestToa5DataImport(unittest.TestCase):
                     myrec = ( rec.origrow, { "envline": rec.envline, "variant": rec.variant } )
                     self.assertEqual(file, rec.filenames)
                     self.assertIs(metad, rec.tblmd.parent)
-                    if rec.tblmd.name=='Hourly': got_hourly_rows.append(rec.row)
+                    if rec.tblmd.name=='Hourly': got_hourly_rows.append(rec.fullrow)
                     got[rec.tblmd.name].append(myrec)
         for k in got:
             got[k] = list( unique_justseen( sorted( got[k], key=lambda x: x[0][0] ) ) )
@@ -133,7 +133,7 @@ class TestToa5DataImport(unittest.TestCase):
             for rec2 in read_toa5_records(fh2, metadatas=metad, filenames=fn_d):
                 count += 1
                 self.assertEqual(("2021-06-18 23:00:00","12","13.36","25.62","27.14","23.64","63.28"), rec2.origrow)
-                self.assertEqual(("2021-06-18 23:00:00","12","13.36","25.62","27.14","23.64",None,"63.28",None), rec2.row)
+                self.assertEqual(("2021-06-18 23:00:00","12","13.36","25.62","27.14","23.64",None,"63.28",None), rec2.fullrow)
                 self.assertEqual(metad.tables['Hourly'], rec2.tblmd)
                 self.assertEqual(exp_metadata[1]["envline"], rec2.envline)
                 self.assertEqual(exp_metadata[1]["variant"], rec2.variant)

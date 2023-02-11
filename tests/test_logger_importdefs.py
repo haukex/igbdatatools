@@ -32,11 +32,11 @@ class TestLoggerDataImportDefs(unittest.TestCase):
 
     def test_record_row(self):
         self.assertEqual( Record(origrow=("abc","def"), tblmd=self.md.tables['foo'], variant=(1,3),
-                                 filenames=(), srcline=1, filetype=DataFileType.CSV).row,
+                                 filenames=(), srcline=1, filetype=DataFileType.CSV).fullrow,
                           (None,"abc",None,"def",None) )
         with self.assertRaises(RecordError):
             _ = Record(origrow=("abc","def"), tblmd=self.md.tables['foo'], variant=(0,1,3),
-                       filenames=(), srcline=1, filetype=DataFileType.CSV).row
+                       filenames=(), srcline=1, filetype=DataFileType.CSV).fullrow
 
     def test_record_source(self):
         rec = Record(origrow=(), tblmd=self.md.tables['foo'], variant=(),

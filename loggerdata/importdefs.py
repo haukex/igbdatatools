@@ -49,7 +49,7 @@ class Record:
     srcline :int
     filetype :DataFileType
     @cached_property
-    def row(self) -> tuple[str|None, ...]:
+    def fullrow(self) -> tuple[str|None, ...]:
         if len(self.origrow) != len(self.variant):
             raise RecordError("row column count mismatch")
         newrow :list[str|None] = [None] * len(self.tblmd.columns)
