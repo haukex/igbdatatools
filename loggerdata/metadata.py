@@ -268,6 +268,13 @@ class Metadata(MdBase):
             if not self.tz:
                 if have_ts_no_tz: raise ValueError(f"Table {tn} has TimestampNoTz columns but there is no TZ set")
                 else: warnings.warn(f"Logger doesn't have a TZ set")
+            else:
+                try:
+                    tzname = self.tz.tzname(None)
+                except Exception as ex:
+                    raise ValueError(f"Failed to get tzname from {self.tz}") from ex
+                if tzname!='UTC' and have_ts_no_tz:
+                    warnings.warn(f"Table {tn} has TimestampNoTz columns and non-UTC timezone (converstion to UTC recommended!)")
             # the dupe check on hdr covers the combination of name/unit/prc
             seen_hdr = set(no_duplicates( (c.hdr for c in tt.columns), name='column') )
             set(no_duplicates( (c.sql for c in tt.columns), name='sql column name'))

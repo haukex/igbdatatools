@@ -254,6 +254,14 @@ class TestLoggerMetadata(unittest.TestCase):
             load_logger_metadata(b'{"logger_name":"Foo","sensors":{"xyz":"abc"},"toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
         with self.assertRaises(ValueError):
             load_logger_metadata(b'{"logger_name":"Foo","variants":["abc","def"],"toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
+        with tempcopy(bmd) as md:
+            md.tz = 'Foo'
+            with self.assertRaises(ValueError): md.validate()
+        with tempcopy(bmd) as md:
+            md.tz = timezone(timedelta(seconds=3*60*60))
+            md.tables['foo'].columns[0].type = TimestampNoTz()
+            with self.assertWarns(UserWarning) as wcm: md.validate()
+            self.assertEqual("Table foo has TimestampNoTz columns and non-UTC timezone (converstion to UTC recommended!)", str(wcm.warning))
 
     def test_metadata_collection(self):
         md1 = load_logger_metadata( Path(__file__).parent/'TestLogger.json' )
