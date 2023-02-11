@@ -29,21 +29,23 @@ from functools import singledispatch
 from tempfile import NamedTemporaryFile
 from collections.abc import Generator, Iterable
 
-AnyPaths = str|bytes|os.PathLike|Iterable[str|bytes|os.PathLike]
+Filename = str|os.PathLike
+
+AnyPaths = Filename|bytes|Iterable[Filename|bytes]
 @singledispatch
-def _topath(item :str|bytes|os.PathLike):
+def _topath(item :Filename|bytes):
     raise TypeError(f"I don't know how to covert this to a Path: {item!r}")
 @_topath.register
 def _(item :bytes): return Path(os.fsdecode(item))
 @_topath.register
-def _(item :str|os.PathLike): return Path(item)
+def _(item :Filename): return Path(item)
 # noinspection PyPep8Naming
 @singledispatch
 def to_Paths(paths :AnyPaths) -> Generator[Path]:
     """Convert various inputs to ``pathlib.Path`` objects."""
     yield from map(_topath, iter(paths))
 @to_Paths.register
-def _(paths :str|bytes|os.PathLike) -> Generator[Path]:
+def _(paths :Filename|bytes) -> Generator[Path]:
     yield _topath(paths)
 
 def autoglob(files :Iterable[str], *, force :bool=False) -> Generator[str]:
@@ -63,7 +65,7 @@ def autoglob(files :Iterable[str], *, force :bool=False) -> Generator[str]:
 
 class Pushd:  # pragma: no cover
     """A context manager that temporarily changes the current working directory."""
-    def __init__(self, newdir :str|os.PathLike):
+    def __init__(self, newdir :Filename):
         self.newdir = newdir
     def __enter__(self):
         self.prevdir = os.getcwd()
@@ -114,7 +116,7 @@ def is_windows_filename_bad(fn :str) -> bool:
         or fn[-1] in (' ', '.') )
 
 @contextmanager
-def replacer(file :str|os.PathLike, *, binary :bool=False, encoding=None, errors=None, newline=None):
+def replacer(file :Filename, *, binary :bool=False, encoding=None, errors=None, newline=None):
     """Replace a file by renaming a temporary file over the original.
 
     With this context manager, a temporary file is created in the same directory as the original file.

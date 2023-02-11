@@ -20,13 +20,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
-import os
 from enum import Enum
 from typing import NamedTuple, Collection
+from fileutils import Filename
 from loggerdata.metadata import MdTable
 from loggerdata import toa5
 from dataclasses import dataclass
-from functools import cache
 
 class DataImportError(RuntimeError): pass
 class NoMetadataMatch(DataImportError): pass
@@ -54,12 +53,12 @@ class Record(NamedTuple):
     tblmd :MdTable
     variant :tuple[int, ...]
     ctx :RecordContext
-    filenames :str|os.PathLike|Collection[str|os.PathLike]|None
+    filenames :Filename|Collection[Filename]|None
     srcline :int
     filetype :DataFileType
     @property
     def source(self) -> str:
-        if isinstance(self.filenames, str|os.PathLike) or not self.filenames:
+        if isinstance(self.filenames, Filename) or not self.filenames:
             return str(self.filenames)+":"+str(self.srcline)
         elif len(self.filenames)==1:
             return str(next(iter(self.filenames)))+":"+str(self.srcline)

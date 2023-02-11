@@ -24,10 +24,10 @@ import io
 import re
 import hashlib
 import operator
-from os import PathLike
 from enum import Enum
 from typing import Self, NamedTuple
 from collections.abc import Iterable, Generator
+from fileutils import Filename
 
 def _algo_from_hashsize(hsh :bytes):
     match len(hsh):
@@ -55,14 +55,14 @@ class HashedFile(NamedTuple):
 
     ``binflag`` and ``valid`` are not used in equality checks or the object's hash. ``fn`` is always stringified for
     equality checks and the object's hash."""
-    fn: str|PathLike
+    fn: Filename
     hsh: bytes
     binflag: bool = True
     valid: bool|None = None
 
     # NOTE algo=DEFAULT_HASH gets evaluated only once, so changing DEFAULT_HASH doesn't change the default algo here!
     @classmethod
-    def from_file(cls, file :str|PathLike, *, algo=DEFAULT_HASH) -> Self:
+    def from_file(cls, file :Filename, *, algo=DEFAULT_HASH) -> Self:
         """Hash a file and return the corresponding object."""
         return cls(fn=file, hsh=cls.hash_file(file, algo=algo), binflag=True, valid=True)
 
@@ -117,7 +117,7 @@ class HashedFile(NamedTuple):
         """Return the hash algorithm used for this hash (based on the length of ``hsh``)."""
         return _algo_from_hashsize(self.hsh)
 
-    def setfn(self, fn : str|PathLike) -> Self:
+    def setfn(self, fn :Filename) -> Self:
         """Return a new object with the filename replaced.
 
         Intended for e.g. converting the filename from absolute to relative or vice versa.
@@ -132,7 +132,7 @@ class HashedFile(NamedTuple):
 
     # NOTE algo=DEFAULT_HASH gets evaluated only once, so changing DEFAULT_HASH doesn't change the default algo here!
     @staticmethod
-    def hash_file(file :str|PathLike, *, algo=DEFAULT_HASH) -> bytes:
+    def hash_file(file :Filename, *, algo=DEFAULT_HASH) -> bytes:
         """Hashes a file."""
         h = algo()
         mv = memoryview( bytearray( io.DEFAULT_BUFFER_SIZE ) )
@@ -142,7 +142,7 @@ class HashedFile(NamedTuple):
                 h.update(mv[:n])
         return h.digest()
 
-def hashes_to_file(file :str|PathLike, hashes :Iterable[HashedFile]) -> int:
+def hashes_to_file(file :Filename, hashes :Iterable[HashedFile]) -> int:
     """Write a list of ``HashedFile``s to a text file."""
     count = 0
     with open(file, 'w') as fh:
@@ -151,7 +151,7 @@ def hashes_to_file(file :str|PathLike, hashes :Iterable[HashedFile]) -> int:
             count += 1
     return count
 
-def hashes_from_file(file :str|PathLike) -> Generator[HashedFile]:
+def hashes_from_file(file :Filename) -> Generator[HashedFile]:
     """Read a list of ``HashedFile``s from a text file."""
     with open(file) as fh:
         for line in fh:

@@ -20,10 +20,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
-import os
 import io
 import json
 import typing
+from fileutils import Filename
 from types import MappingProxyType, NoneType
 from pprint import pprint
 import jschon
@@ -48,11 +48,11 @@ def _(obj :tuple|list): return tuple( freeze_json(o) for o in obj )
 def _(obj :dict): return MappingProxyType( { k: freeze_json(v) for k, v in obj.items() } )
 
 @singledispatch
-def load_json(file :str|os.PathLike|io.IOBase|typing.IO|bytes|bytearray):
+def load_json(file :Filename|io.IOBase|typing.IO|bytes|bytearray):
     """Utility function to load JSON either from a filename, file object, or ``bytes`` object."""
     raise TypeError(f"file must be a filename, file object, or bytes, not {repr(file)}")
 @load_json.register
-def _(file :str|os.PathLike):
+def _(file :Filename):
     with open(file) as fh: return json.load(fh)
 @load_json.register
 def _(file :io.IOBase|typing.IO):

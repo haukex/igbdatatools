@@ -21,9 +21,9 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 import csv
-import os
 import dataclasses
 from collections.abc import Iterable, Generator, Collection
+from fileutils import Filename
 from loggerdata import toa5
 from loggerdata.metadata import Metadata, MdTable, MdCollection, LoggerType, ColumnHeader
 from loggerdata.importdefs import Toa5Context, NoTableMatch, NoVariantMatch, NoMetadataMatch, Record, RecordError, DataFileType
@@ -58,7 +58,7 @@ def header_match(envline :toa5.EnvironmentLine, columns :tuple[ColumnHeader, ...
         return tblmd, variant
 
 def read_toa5_records(fh :Iterable[str], *, metadatas :MdCollection|Metadata|MdTable,
-        filenames :str|os.PathLike|Collection[str|os.PathLike]|None = None ) -> Generator[Record]:
+        filenames :Filename|Collection[Filename]|None = None ) -> Generator[Record]:
     """Read a TOA5 file, returning ``Record``s for each row in the file."""
     metadatas = MdCollection(metadatas)
     csvrd = csv.reader(fh, strict=True)
