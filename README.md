@@ -10,6 +10,14 @@ You can place this directory in your `PYTHONPATH` environment variable,
 see the file `notes/Notes.md` for details.
 
 
+TODOs
+-----
+
+- Check and generate documentation with Sphinx
+  - Many places that use double-backtick strings could use roles (`:func:` etc.) instead.
+- Apply `mypy` more
+
+
 Author, Copyright, and License
 ------------------------------
 
