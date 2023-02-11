@@ -30,12 +30,12 @@ from loggerdata.toa5 import EnvironmentLine
 from loggerdata.toa5.dataimport import read_toa5_records, header_match
 from loggerdata.importdefs import NoTableMatch, DataFileType, NoMetadataMatch, NoVariantMatch, RecordError
 
+# Note how this dataset is extemely similar to that in TestLoggerDataImporter
 exp_metadata = [
     { "envline": EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger.CR1X", program_sig="2438", table_name="Daily" ), "variant":(0,1,2,3,4,5,6,7) },
     { "envline": EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger.CR1X", program_sig="2438", table_name="Hourly"), "variant":(0,1,2,3,4,5,7)  },
     { "envline": EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger.CR1X", program_sig="1234", table_name="Hourly"), "variant":(0,1,2,3,4,6,7,8) },
 ]
-
 expect = {
     "Daily": [
         (("2021-06-19 00:00:00","0","12.99","2021-06-18 16:08:30","23.72","2021-06-19 00:00:00","39.16","2021-06-18 15:33:20"),exp_metadata[0]),
