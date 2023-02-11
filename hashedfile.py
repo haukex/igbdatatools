@@ -179,6 +179,3 @@ def sort_hashedfiles(hfs :Iterable[HashedFile], sort :SortingType) -> Generator[
     elif sort==SortingType.BY_HASH: yield from sorted(hfs, key=operator.itemgetter(1))
     elif sort==SortingType.BY_FILE: yield from sorted(hfs, key=operator.itemgetter(0))
     else: raise ValueError(repr(sort))
-
-if __name__ == '__main__':  # pragma: no cover
-    raise RuntimeError("this is purely a library, not runnable")
