@@ -21,17 +21,29 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 import unittest
-from loggerdata.importdefs import Record, RecordContext, DataFileType
+from dataclasses import replace
+from loggerdata.metadata import load_logger_metadata
+from loggerdata.importdefs import Record, DataFileType, RecordError
 
 class TestLoggerDataImportDefs(unittest.TestCase):
 
+    md = load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":'
+        b'{"prikey":0,"columns":[ {"name":"Hello"}, {"name":"World"}, {"name":"Foo"}, {"name":"Bar"}, {"name":"Quz"} ]}}}')
+
+    def test_record_row(self):
+        self.assertEqual( Record(origrow=("abc","def"), tblmd=self.md.tables['foo'], variant=(1,3),
+                                 filenames=(), srcline=1, filetype=DataFileType.CSV).row,
+                          (None,"abc",None,"def",None) )
+        with self.assertRaises(RecordError):
+            _ = Record(origrow=("abc","def"), tblmd=self.md.tables['foo'], variant=(0,1,3),
+                       filenames=(), srcline=1, filetype=DataFileType.CSV).row
+
     def test_record_source(self):
-        # noinspection PyTypeChecker
-        rec = Record(row=(), tblmd=None, variant=(), ctx=RecordContext(),
+        rec = Record(origrow=(), tblmd=self.md.tables['foo'], variant=(),
             filenames=("foo.zip","bar.csv"), srcline=42, filetype=DataFileType.CSV)
         self.assertEqual( rec.source, "('foo.zip', 'bar.csv'):42" )
-        self.assertEqual( rec._replace(filenames=('bar.csv',)).source, "bar.csv:42" )
-        self.assertEqual( rec._replace(filenames='bar.csv').source, "bar.csv:42" )
+        self.assertEqual( replace(rec, filenames=('bar.csv',)).source, "bar.csv:42" )
+        self.assertEqual( replace(rec, filenames='bar.csv').source, "bar.csv:42" )
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

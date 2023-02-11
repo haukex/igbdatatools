@@ -26,7 +26,7 @@ from collections.abc import Iterable, Generator, Collection
 from fileutils import Filename
 from loggerdata import toa5
 from loggerdata.metadata import Metadata, MdTable, MdCollection, LoggerType, ColumnHeader
-from loggerdata.importdefs import Toa5Context, NoTableMatch, NoVariantMatch, NoMetadataMatch, Record, RecordError, DataFileType
+from loggerdata.importdefs import NoTableMatch, NoVariantMatch, NoMetadataMatch, Toa5Record, RecordError, DataFileType
 
 def header_match(envline :toa5.EnvironmentLine, columns :tuple[ColumnHeader, ...],
                  metadatas: Iterable[Metadata]) -> tuple[MdTable, tuple]:
@@ -58,22 +58,18 @@ def header_match(envline :toa5.EnvironmentLine, columns :tuple[ColumnHeader, ...
         return tblmd, variant
 
 def read_toa5_records(fh :Iterable[str], *, metadatas :MdCollection|Metadata|MdTable,
-        filenames :Filename|Collection[Filename]|None = None ) -> Generator[Record]:
+        filenames :Filename|Collection[Filename]|None = None ) -> Generator[Toa5Record]:
     """Read a TOA5 file, returning ``Record``s for each row in the file."""
     metadatas = MdCollection(metadatas)
     csvrd = csv.reader(fh, strict=True)
     envline, columns = toa5.read_header(csvrd)
     tblmd, variant = header_match(envline, columns, metadatas)
-    ctx = Toa5Context(envline=envline)
     try:
-        for oldrow in csvrd:
-            if len(oldrow) != len(variant):
+        for origrow in csvrd:
+            if len(origrow) != len(variant):
                 raise RecordError("row column count mismatch")
-            row :list[str|None] = [None] * len(tblmd.columns)
-            for old_i, new_i in enumerate(variant):
-                row[new_i] = oldrow[old_i]
-            yield Record(row=tuple(row), tblmd=tblmd, variant=variant, ctx=ctx,
-                         filenames=filenames, srcline=csvrd.line_num, filetype=DataFileType.TOA5)
+            yield Toa5Record(origrow=tuple(origrow), tblmd=tblmd, variant=variant, envline=envline,
+                             filenames=filenames, srcline=csvrd.line_num, filetype=DataFileType.TOA5)
     except csv.Error as ex:
         raise RecordError(f"CSV parse error, {filenames} line {csvrd.line_num}") from ex
     except RecordError: raise

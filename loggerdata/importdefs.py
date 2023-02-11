@@ -21,11 +21,12 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 from enum import Enum
-from typing import NamedTuple, Collection
+from typing import Collection
 from fileutils import Filename
 from loggerdata.metadata import MdTable
 from loggerdata import toa5
 from dataclasses import dataclass
+from functools import cached_property
 
 class DataImportError(RuntimeError): pass
 class NoMetadataMatch(DataImportError): pass
@@ -38,25 +39,24 @@ class DataFileType(Enum):
     CSV = 1
     TOA5 = 2
 
-@dataclass(frozen=True, kw_only=True)
-class RecordContext:
-    """Logger-specific context for a ``Record``."""
-    pass
-
-@dataclass(frozen=True, kw_only=True)
-class Toa5Context(RecordContext):
-    envline :toa5.EnvironmentLine
-
-class Record(NamedTuple):
+@dataclass(kw_only=True, frozen=True)
+class Record:
     """A named tuple representing a row of logger data along with all of its context."""
-    row :tuple[str|None, ...]
+    origrow :tuple[str, ...]
     tblmd :MdTable
     variant :tuple[int, ...]
-    ctx :RecordContext
     filenames :Filename|Collection[Filename]|None
     srcline :int
     filetype :DataFileType
-    @property
+    @cached_property
+    def row(self) -> tuple[str|None, ...]:
+        if len(self.origrow) != len(self.variant):
+            raise RecordError("row column count mismatch")
+        newrow :list[str|None] = [None] * len(self.tblmd.columns)
+        for old_i, new_i in enumerate(self.variant):
+            newrow[new_i] = self.origrow[old_i]
+        return tuple(newrow)
+    @cached_property
     def source(self) -> str:
         if isinstance(self.filenames, Filename) or not self.filenames:
             return str(self.filenames)+":"+str(self.srcline)
@@ -64,3 +64,7 @@ class Record(NamedTuple):
             return str(next(iter(self.filenames)))+":"+str(self.srcline)
         else:
             return str(self.filenames)+":"+str(self.srcline)
+
+@dataclass(kw_only=True, frozen=True)
+class Toa5Record(Record):
+    envline :toa5.EnvironmentLine
