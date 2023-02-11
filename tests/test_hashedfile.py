@@ -24,8 +24,9 @@ import unittest
 import os
 import hashlib
 from pathlib import Path, PurePath
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import TemporaryDirectory
 from hashedfile import HashedFile, hashes_to_file, hashes_from_file, DEFAULT_HASH, sort_hashedfiles, SortingType
+from testutils import MyNamedTempFile
 
 class TestHashedFile(unittest.TestCase):
 
@@ -149,8 +150,7 @@ class TestHashedFile(unittest.TestCase):
     def test_to_from_file(self):
         hsh1 = [ HashedFile.from_file(f, algo=hashlib.sha256).setfn( f.relative_to(self.temppath) )
                  for f in self.temppath.rglob('*') if f.is_file() ]
-        tf = NamedTemporaryFile()
-        try:
+        with MyNamedTempFile() as tf:
             tf.close()
             # write the hashes to the file
             cnt = hashes_to_file(tf.name, hsh1)
@@ -162,8 +162,6 @@ class TestHashedFile(unittest.TestCase):
             # read the file back in
             hsh2 = list(hashes_from_file(tf.name))
             self.assertEqual(hsh1, hsh2)
-        finally:
-            os.unlink(tf.name)
 
     def test_sort_hashedfiles(self):
         lines = (

@@ -24,7 +24,7 @@ import unittest
 from pathlib import Path
 from loggerdata.toa5.pandas import toa5_to_pandas_dataframe
 from loggerdata.toa5 import Toa5Error
-from tempfile import NamedTemporaryFile
+from testutils import MyNamedTempFile
 import pandas
 import pandas.testing
 
@@ -82,8 +82,7 @@ class TestToa5Pandas(unittest.TestCase):
             ("PTemp_C_Min","Deg C","Min"), ("PTemp_C_Max","Deg C","Max"), ("AirT_C(42)","Deg C","Smp"), ("RelHumid","%","Smp") ))
 
     def test_toa5_pandas_errors(self):
-        tf = NamedTemporaryFile(delete=False)
-        try:
+        with MyNamedTempFile() as tf:
             tf.write(b'"TOA5","a","b","c","d","e","f","g"\n')
             tf.write(b'"RECORD","BattV_Min"\n')
             tf.write(b'"RN","Volts"\n')
@@ -92,8 +91,6 @@ class TestToa5Pandas(unittest.TestCase):
             tf.close()
             with self.assertRaises(Toa5Error):
                 toa5_to_pandas_dataframe(tf.name)
-        finally:
-            Path(tf.name).unlink()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

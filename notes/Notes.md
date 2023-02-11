@@ -86,6 +86,8 @@ Some of the reasons I require the latest Python versions:
   - `datetime.fromisoformat` is more flexible (e.g. supports trailing `Z`)
   - `contextlib.chdir`
   - `typing.Self`
+- Python 3.12
+  - `NamedTemporaryFile(delete=True, delete_on_close=False)`
 
 
 Author, Copyright, and License

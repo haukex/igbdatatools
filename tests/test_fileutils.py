@@ -25,7 +25,8 @@ import sys
 import os
 import stat
 from pathlib import Path
-from tempfile import TemporaryDirectory, NamedTemporaryFile
+from tempfile import TemporaryDirectory
+from testutils import MyNamedTempFile
 from fileutils import to_Paths, autoglob, Pushd, filetypestr, is_windows_filename_bad, replacer
 
 class TestFileUtils(unittest.TestCase):
@@ -118,10 +119,10 @@ class TestFileUtils(unittest.TestCase):
         self.assertTrue( is_windows_filename_bad("Hello.txt.") )
 
     def test_replacer(self):
-        try:
+        with MyNamedTempFile('w') as tf:
             # Basic Test
-            with NamedTemporaryFile('w', delete=False) as tf:
-                print("Hello\nWorld!", file=tf)
+            print("Hello\nWorld!", file=tf)
+            tf.close()
             with replacer(tf.name) as (ifh, ofh):
                 for line in ifh:
                     line = line.replace('o', 'u')
@@ -172,15 +173,11 @@ class TestFileUtils(unittest.TestCase):
             with self.assertRaises(ValueError):
                 with replacer(Path(tf.name).parent): pass
 
-        finally:
-            os.unlink(tf.name)
-            del tf
-
         # Permissions test
         if not sys.platform.startswith('win32'):
-            try:
-                with NamedTemporaryFile('w', delete=False) as tf:
-                    print("Hello\nWorld!", file=tf)
+            with MyNamedTempFile('w') as tf:
+                print("Hello\nWorld!", file=tf)
+                tf.close()
                 orig_ino = os.stat(tf.name).st_ino
                 os.chmod(tf.name, 0o741)
                 with replacer(tf.name) as (_, ofh): pass
@@ -188,9 +185,6 @@ class TestFileUtils(unittest.TestCase):
                 st = os.stat(tf.name)
                 self.assertNotEqual( st.st_ino, orig_ino )
                 self.assertEqual( stat.S_IMODE(st.st_mode), 0o741 )
-            finally:
-                os.unlink(tf.name)
-                del tf
         else:   # pragma: no cover
             print(f"Skipping chmod test", file=sys.stderr)
 
