@@ -26,6 +26,7 @@ from typing import NamedTuple, Collection
 from loggerdata.metadata import MdTable
 from loggerdata import toa5
 from dataclasses import dataclass
+from functools import cache
 
 class DataImportError(RuntimeError): pass
 class NoMetadataMatch(DataImportError): pass
@@ -49,15 +50,15 @@ class Toa5Context(RecordContext):
 
 class Record(NamedTuple):
     """A named tuple representing a row of logger data along with all of its context."""
-    row :tuple[str|None]
+    row :tuple[str|None, ...]
     tblmd :MdTable
-    variant :tuple
+    variant :tuple[int, ...]
     ctx :RecordContext
     filenames :str|os.PathLike|Collection[str|os.PathLike]|None
     srcline :int
     filetype :DataFileType
     @property
-    def source(self):
+    def source(self) -> str:
         if isinstance(self.filenames, str|os.PathLike) or not self.filenames:
             return str(self.filenames)+":"+str(self.srcline)
         elif len(self.filenames)==1:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3c
+#!/usr/bin/env python3
 """Tests for loggerdata.importdefs
 
 Author, Copyright, and License
