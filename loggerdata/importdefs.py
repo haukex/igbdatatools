@@ -21,7 +21,9 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 from enum import Enum
-from typing import Collection
+from collections.abc import Sequence
+from typing import Optional
+from more_itertools import first
 from fileutils import Filename
 from loggerdata.metadata import MdTable
 from loggerdata import toa5
@@ -45,7 +47,7 @@ class Record:
     origrow :tuple[str, ...]
     tblmd :MdTable
     variant :tuple[int, ...]
-    filenames :Filename|Collection[Filename]|None
+    filenames :Optional[Filename|Sequence[Filename]]
     srcline :int
     filetype :DataFileType
     @cached_property
@@ -61,7 +63,7 @@ class Record:
         if isinstance(self.filenames, Filename) or not self.filenames:
             return str(self.filenames)+":"+str(self.srcline)
         elif len(self.filenames)==1:
-            return str(next(iter(self.filenames)))+":"+str(self.srcline)
+            return str(first(self.filenames))+":"+str(self.srcline)
         else:
             return str(self.filenames)+":"+str(self.srcline)
 

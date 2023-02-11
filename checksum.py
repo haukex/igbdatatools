@@ -24,7 +24,7 @@ import stat
 from collections.abc import Generator, Iterable
 from itertools import chain
 from pathlib import Path, PurePath
-from typing import NamedTuple, Self
+from typing import NamedTuple, Self, Optional
 from ordered_enum import OrderedEnum
 from more_itertools import unique_everseen, partition
 from hashedfile import HashedFile, hashes_from_file, hashes_to_file, DEFAULT_HASH
@@ -55,8 +55,8 @@ class FileResult(NamedTuple):
     fn :PurePath
     origfn :str
     code :ResultCode
-    hsh :HashedFile|None = None
-    msg :str|None = None
+    hsh :Optional[HashedFile] = None
+    msg :Optional[str] = None
 
     def hash_me(self, *, check_code :bool=True, algo=DEFAULT_HASH) -> Self:
         """Returns a new object with the ``hsh`` field populated (if it hasn't been populated before).
@@ -241,10 +241,10 @@ if __name__ == '__main__':  # pragma: no cover
 
     # list files
     allpaths = tuple( autoglob(args.paths) if args.paths else (Path(),) )
-    thefiles = list_hashable_files(allpaths)  # get generator
+    thefilesgen = list_hashable_files(allpaths)  # get generator
     if not args.quiet:  # optionally wrap with progress bar
-        thefiles = tqdm(thefiles, desc="Listing files...", unit=" files")
-    thefiles = list(thefiles)  # now run the generator
+        thefilesgen = tqdm(thefilesgen, desc="Listing files...", unit=" files")
+    thefiles = list(thefilesgen)  # now run the generator
 
     if args.cmd == 'gen':  # generate hashes
         hashes = ( fr.hash_me().hsh for fr in thefiles if fr.code != ResultCode.SKIP )  # set up generator
@@ -267,9 +267,9 @@ if __name__ == '__main__':  # pragma: no cover
             if not args.quiet: print(f"Done, wrote {count} hashes", file=sys.stderr)
     elif args.cmd == 'check':
         # read hashes from file
-        hashes = list(hashes_from_file(args.sumfile))
+        hashesl = list(hashes_from_file(args.sumfile))
         # match hash list against the file list (already obtained from filesystem above)
-        matched = match_hashes(sumsrc=hashes, filesrc=thefiles, paths=allpaths, ignorepath=args.ignorepath)
+        matched :Iterable[FileResult] = match_hashes(sumsrc=hashesl, filesrc=thefiles, paths=allpaths, ignorepath=args.ignorepath)
         if not args.quiet:  # optionally wrap with progress bar
             # only "NEEDSVALIDATE" files will really take processing time because those need to be hashed
             # so split the list into two iterators, put a progress bar on those files, and recombine
@@ -283,10 +283,10 @@ if __name__ == '__main__':  # pragma: no cover
             errors += 1
         sys.stdout.flush()
         if errors:
-            if not args.quiet: print(f"Done, {errors} ERROR(s), checked {len(hashes)} hashes against {len(thefiles)} files", file=sys.stderr)
+            if not args.quiet: print(f"Done, {errors} ERROR(s), checked {len(hashesl)} hashes against {len(thefiles)} files", file=sys.stderr)
             sys.exit(1)
         else:
-            if not args.quiet: print(f"Done, no errors, checked {len(hashes)} hashes against {len(thefiles)} files", file=sys.stderr)
+            if not args.quiet: print(f"Done, no errors, checked {len(hashesl)} hashes against {len(thefiles)} files", file=sys.stderr)
     else:
         raise RuntimeError(repr(args.cmd))
 

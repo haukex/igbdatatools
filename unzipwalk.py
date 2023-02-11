@@ -28,6 +28,7 @@ from pathlib import PurePosixPath, PurePath, Path
 from tarfile import TarFile
 from zipfile import ZipFile
 import typing
+from typing import Optional
 from collections.abc import Generator, Sequence
 from fileutils import AnyPaths, to_Paths
 
@@ -38,8 +39,8 @@ class FileType(Enum):
     SYMLINK = 3
     OTHER = 4
 
-def _procfile(fns :Sequence[PurePath], fh :typing.IO[bytes]|GzipFile) \
-        -> Generator[ tuple[ tuple[PurePath, ...], typing.IO[bytes], FileType ] ]:
+def _procfile(fns :tuple[PurePath, ...], fh :typing.IO[bytes]|GzipFile) \
+        -> Generator[ tuple[ tuple[PurePath, ...], Optional[typing.IO[bytes]], FileType ], None, None ]:
     bfnl = fns[-1].name.lower()
     if bfnl.endswith('.tar.gz') or bfnl.endswith('.tgz') or bfnl.endswith('.tar'):
         yield fns, None, FileType.ARCHIVE
@@ -76,7 +77,7 @@ def _procfile(fns :Sequence[PurePath], fh :typing.IO[bytes]|GzipFile) \
         yield fns, fh, FileType.FILE
 
 def unzipwalk(paths :AnyPaths, *, onlyfiles :bool=True) \
-        -> Generator[ tuple[ tuple[PurePath, ...], typing.IO[bytes], FileType ] ]:
+        -> Generator[ tuple[ tuple[PurePath, ...], Optional[typing.IO[bytes]], FileType ], None, None ]:
     """Recursively step into directories and compressed files and yield names and filehandles.
 
     This generator yields tuples consisting of the elements:
@@ -107,9 +108,9 @@ def unzipwalk(paths :AnyPaths, *, onlyfiles :bool=True) \
 
     Currently supported are ZIP, tar, tar+gz, and gz compressed files.
     """
-    paths = tuple(to_Paths(paths))
-    for p in paths: p.resolve(strict=True)  # force FileNotFound errors early
-    for p in chain.from_iterable( pa.rglob('*') if pa.is_dir() else (pa,) for pa in paths ):
+    ppaths = tuple(to_Paths(paths))
+    for p in ppaths: p.resolve(strict=True)  # force FileNotFound errors early
+    for p in chain.from_iterable( pa.rglob('*') if pa.is_dir() else (pa,) for pa in ppaths ):
         if p.is_symlink():
             if not onlyfiles: yield (p,), None, FileType.SYMLINK
         elif p.is_dir():

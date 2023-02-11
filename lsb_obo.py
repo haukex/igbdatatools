@@ -48,6 +48,6 @@ def lsb_obo(a :str, b :str) -> bool:
     assert len(a)==len(b)
     assert a.index('.')==b.index('.')
     # convert to int for comparison
-    a = int(a.replace('.',''))
-    b = int(b.replace('.',''))
-    return abs(a-b)==1
+    av = int(a.replace('.',''))
+    bv = int(b.replace('.',''))
+    return abs(av-bv)==1

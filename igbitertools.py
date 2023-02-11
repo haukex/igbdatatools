@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 from collections.abc import Sized, Iterator, Iterable, Callable
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Optional
 
 def gray_product(*iterables):
     """Like :func:`itertools.product`, but return tuples in an order such that only one
@@ -66,7 +66,7 @@ class SizedCallbackIterator(Generic[_T], Sized, Iterator[_T]):
     For example, this can be used to wrap a generator which has a known output length
     (e.g. if it returns exactly one item per input item), so that it can then
     be used in libraries like ``tqdm``."""
-    def __init__(self, it :Iterable[_T], length :int, *, strict :bool=False, callback :Callable[[int, _T], None]=None):
+    def __init__(self, it :Iterable[_T], length :int, *, strict :bool=False, callback :Optional[Callable[[int, _T], None]]=None):
         if length<0: raise ValueError("length must be >= 0")
         self.it = iter(it)
         self.length = length

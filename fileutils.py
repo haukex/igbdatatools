@@ -41,14 +41,14 @@ def _(item :bytes): return Path(os.fsdecode(item))
 def _(item :Filename): return Path(item)
 # noinspection PyPep8Naming
 @singledispatch
-def to_Paths(paths :AnyPaths) -> Generator[Path]:
+def to_Paths(paths :AnyPaths) -> Generator[Path, None, None]:
     """Convert various inputs to ``pathlib.Path`` objects."""
     yield from map(_topath, iter(paths))
 @to_Paths.register
-def _(paths :Filename|bytes) -> Generator[Path]:
+def _(paths :Filename|bytes) -> Generator[Path, None, None]:
     yield _topath(paths)
 
-def autoglob(files :Iterable[str], *, force :bool=False) -> Generator[str]:
+def autoglob(files :Iterable[str], *, force :bool=False) -> Generator[str, None, None]:
     """In Windows, automatically apply ``glob`` and ``expanduser``, otherwise don't change the input."""
     from glob import glob
     from os.path import expanduser

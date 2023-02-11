@@ -22,14 +22,15 @@ along with this program. If not, see https://www.gnu.org/licenses/
 """
 import csv
 import dataclasses
-from collections.abc import Iterable, Generator, Collection
+from typing import Optional
+from collections.abc import Iterable, Generator, Sequence
 from fileutils import Filename
 from loggerdata import toa5
 from loggerdata.metadata import Metadata, MdTable, MdCollection, LoggerType, ColumnHeader
 from loggerdata.importdefs import NoTableMatch, NoVariantMatch, NoMetadataMatch, Toa5Record, RecordError, DataFileType
 
 def header_match(envline :toa5.EnvironmentLine, columns :tuple[ColumnHeader, ...],
-                 metadatas: Iterable[Metadata]) -> tuple[MdTable, tuple]:
+                 metadatas: Iterable[Metadata]) -> tuple[MdTable, tuple[int, ...]]:
     """Figure out which metadata/logger this header belongs to."""
     found = []
     for md in metadatas:
@@ -58,7 +59,7 @@ def header_match(envline :toa5.EnvironmentLine, columns :tuple[ColumnHeader, ...
         return tblmd, variant
 
 def read_toa5_records(fh :Iterable[str], *, metadatas :MdCollection|Metadata|MdTable,
-        filenames :Filename|Collection[Filename]|None = None ) -> Generator[Toa5Record]:
+        filenames :Optional[Filename|Sequence[Filename]] = None ) -> Generator[Toa5Record, None, None]:
     """Read a TOA5 file, returning ``Record``s for each row in the file."""
     metadatas = MdCollection(metadatas)
     csvrd = csv.reader(fh, strict=True)

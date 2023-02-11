@@ -68,7 +68,7 @@ def read_header(csvreader :Iterator[Sequence[str]]) -> tuple[EnvironmentLine, tu
     columns = tuple( ColumnHeader(*c) for c in zip(field_names, units, proc, strict=True) )
     return EnvironmentLine(**envline_dict), columns
 
-def meta2hdr(tblmd :MdTable) -> Generator[tuple[str, ...]]:
+def meta2hdr(tblmd :MdTable) -> Generator[tuple[str, ...], None, None]:
     yield tuple( ("TOA5", *(getattr(tblmd.parent.toa5_env_match, c) for c in EnvironmentLine._fields if c!='table_name'), tblmd.name) )
     yield tuple( '' if c.name is None else c.name for c in tblmd.columns )
     yield tuple( '' if c.unit is None else c.unit for c in tblmd.columns )

@@ -29,7 +29,7 @@ from itertools import chain
 from enum import Enum
 from datetime import datetime, timedelta, timezone, tzinfo
 from zoneinfo import ZoneInfo
-from typing import Self, NamedTuple
+from typing import Self, NamedTuple, Optional
 from collections.abc import Sequence
 from more_itertools import unique_everseen
 from igbitertools import no_duplicates
@@ -87,8 +87,8 @@ class MdBase:
 class MdBaseCol(MdBase):
     """A basic column definition."""
     name: str
-    unit: str|None = None
-    prc:  str|None = None
+    unit: Optional[str] = None
+    prc:  Optional[str] = None
     @property
     def hdr(self) -> ColumnHeader:
         return ColumnHeader(name=self.name, unit="" if self.unit is None else self.unit, prc="" if self.prc is None else self.prc)
@@ -124,11 +124,11 @@ class MdBaseCol(MdBase):
 @dataclass(kw_only=True)
 class MdColumn(MdBaseCol):
     """A full column definition."""
-    type:    datatypes.BaseType|None = None  #TODO Later: won't be optional in the future (once all our logger metadata is complete)
-    var:     str|None = None
-    desc:    str|None = None
-    plotgrp: str|None = None
-    sens:    str|None = None
+    type:    Optional[datatypes.BaseType] = None  #TODO Later: won't be optional in the future (once all our logger metadata is complete)
+    var:     Optional[str] = None
+    desc:    Optional[str] = None
+    plotgrp: Optional[str] = None
+    sens:    Optional[str] = None
     def __post_init__(self):
         super().__post_init__()
         if self.type is not None and not isinstance(self.type, datatypes.BaseType):
@@ -203,12 +203,12 @@ class MdTable(MdBase):
 @dataclass(kw_only=True)
 class Toa5EnvMatch(MdBase):
     """A class representing values to be matched against a TOA5 "environment line"."""
-    station_name:  str|None = None
-    logger_model:  str|None = None
-    logger_serial: str|None = None
-    logger_os:     str|None = None
-    program_name:  str|None = None
-    program_sig:   str|None = None
+    station_name:  Optional[str] = None
+    logger_model:  Optional[str] = None
+    logger_serial: Optional[str] = None
+    logger_os:     Optional[str] = None
+    program_name:  Optional[str] = None
+    program_sig:   Optional[str] = None
     def validate(self):
         if all( getattr(self, f.name) is None for f in fields(self)):
             raise ValueError("all fields of Toa5EnvMatch are None")
@@ -223,11 +223,11 @@ class Metadata(MdBase):
     logger_name: str
     tables: dict[str, MdTable]
     logger_type :LoggerType
-    toa5_env_match: Toa5EnvMatch|None = None
-    tz: tzinfo|None = None
-    min_datetime: datetime|None = None
-    variants: Sequence[str]|None = None
-    sensors: dict[str,str]|None = None
+    toa5_env_match: Optional[Toa5EnvMatch] = None
+    tz: Optional[tzinfo] = None
+    min_datetime: Optional[datetime] = None
+    variants: Optional[Sequence[str]] = None
+    sensors: Optional[dict[str,str]] = None
     def __post_init__(self):
         for tbl in self.tables.values():
             tbl.parent = self

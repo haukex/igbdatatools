@@ -28,14 +28,15 @@ along with this program. If not, see https://www.gnu.org/licenses/
 """
 import re
 from collections.abc import Iterable
+from typing import Any, Optional
 from datetime import datetime, timezone
 from decimal import Decimal
 import numpy
 
 class BaseType:
     """Abstract base class for data types implemented by this class."""
-    pg_type = NotImplemented
-    np_type = NotImplemented
+    pg_type :Optional[str] = None
+    np_type :Any = None
     def check(self, value :str) -> bool:
         """Validate whether the given value is of this type."""
         raise NotImplementedError()  # pragma: no cover
@@ -92,7 +93,7 @@ class Num(BaseType):
     """
     np_type = numpy.float64
     _base_num_regex = re.compile(r'''\A(?!-?\.?\Z)-?\d*(?:\.\d*)?\Z''')
-    def __init__(self, precision :int=None, scale :int=None):
+    def __init__(self, precision :Optional[int]=None, scale :Optional[int]=None):
         if precision is None:
             self.pg_type = "NUMERIC"
             if scale is not None: raise TypeError("must specify precision when scale is specified")
@@ -243,11 +244,11 @@ class TypeInferrer:
         self._is_num = True
         self._num_prec = -1
         self._num_scale = -1
-        self._nonnegint = NonNegInt()
-        self._bigint = BigInt()
-        self._timestamp = TimestampNoTz()
-        self._timestamptz = TimestampWithTz()
-        self._onlynan = OnlyNan()
+        self._nonnegint :Optional[NonNegInt] = NonNegInt()
+        self._bigint :Optional[BigInt] = BigInt()
+        self._timestamp :Optional[TimestampNoTz] = TimestampNoTz()
+        self._timestamptz :Optional[TimestampWithTz] = TimestampWithTz()
+        self._onlynan :Optional[OnlyNan] = OnlyNan()
     def run(self, strings :Iterable[str]):
         for s in strings: self.send(s)
         return self.finish()

@@ -32,7 +32,7 @@ from fileutils import AnyPaths, filetypestr, is_windows_filename_bad
 _base_allowed_chars = frozenset( set(uniutils.common_ascii) - fileutils.invalidchars )
 
 def list_problems(paths :AnyPaths, *, ignore_compressed :bool = False, ignore_symlinks :bool = False,
-        allowed_chars :set[str] = None ) -> Generator[tuple[tuple[PurePath, ...], str]]:
+        allowed_chars :set[str] = None ) -> Generator[tuple[tuple[PurePath, ...], str], None, None]:
     """This function walks a directory tree, including entering compressed files, and checks whether all filenames
     encountered are safe to use in a Windows environment.
 
@@ -42,7 +42,7 @@ def list_problems(paths :AnyPaths, *, ignore_compressed :bool = False, ignore_sy
     ``allowed_chars`` may be a set of characters which are allowed in filenames in addition to basic ASCII."""
     allowed = _base_allowed_chars
     if allowed_chars: allowed |= allowed_chars
-    collections :dict[tuple[PurePath], set[str]] = defaultdict(set)
+    collections :dict[tuple[PurePath, ...], set[str]] = defaultdict(set)
     for fns,bfh,fty in unzipwalk(paths, onlyfiles=False):
         thefn = fns[-1]
         # ##### ##### Type Check ##### #####

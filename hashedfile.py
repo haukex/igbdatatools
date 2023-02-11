@@ -25,7 +25,7 @@ import re
 import hashlib
 import operator
 from enum import Enum
-from typing import Self, NamedTuple
+from typing import Self, NamedTuple, Optional
 from collections.abc import Iterable, Generator
 from fileutils import Filename
 
@@ -58,7 +58,7 @@ class HashedFile(NamedTuple):
     fn: Filename
     hsh: bytes
     binflag: bool = True
-    valid: bool|None = None
+    valid: Optional[bool] = None
 
     # NOTE algo=DEFAULT_HASH gets evaluated only once, so changing DEFAULT_HASH doesn't change the default algo here!
     @classmethod
@@ -67,7 +67,7 @@ class HashedFile(NamedTuple):
         return cls(fn=file, hsh=cls.hash_file(file, algo=algo), binflag=True, valid=True)
 
     @classmethod
-    def from_line(cls, line :str, *, binflag :bool|None=None) -> Self:
+    def from_line(cls, line :str, *, binflag :Optional[bool]=None) -> Self:
         """Parse a line into an object.
 
         The ``binflag`` argument can be used to override the flag found in the line."""
@@ -151,7 +151,7 @@ def hashes_to_file(file :Filename, hashes :Iterable[HashedFile]) -> int:
             count += 1
     return count
 
-def hashes_from_file(file :Filename) -> Generator[HashedFile]:
+def hashes_from_file(file :Filename) -> Generator[HashedFile, None, None]:
     """Read a list of ``HashedFile``s from a text file."""
     with open(file) as fh:
         for line in fh:
@@ -164,7 +164,7 @@ class SortingType(Enum):
     BY_HASH = 2
     BY_FILE = 3
 
-def sort_hashedfiles(hfs :Iterable[HashedFile], sort :SortingType) -> Generator[HashedFile]:
+def sort_hashedfiles(hfs :Iterable[HashedFile], sort :SortingType) -> Generator[HashedFile, None, None]:
     """Sort ``HashedFile``s by different schemes.
 
     Note that for all ``SortingType``s other than ``NO_SORT``, ``sorted``

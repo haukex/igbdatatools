@@ -91,7 +91,7 @@ def init_handlers() -> None:
     """Set up the ``CustomHandlers`` once and don't change them back."""
     CustomHandlers().__enter__()
 
-def javaishstacktrace(ex :BaseException) -> Generator[str]:
+def javaishstacktrace(ex :BaseException) -> Generator[str, None, None]:
     """Generate a stack trace in the style of Java.
 
     Compared to Java, the order of exceptions is reversed, so it reads more like a stack."""
