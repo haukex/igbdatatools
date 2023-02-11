@@ -10,7 +10,7 @@
 
 # TODO: still need to test pydantic in detail
 # https://pydantic-docs.helpmanual.io/usage/validation_decorator/
-pydantic
+#pydantic
 
 # https://mypy.readthedocs.io/
 mypy

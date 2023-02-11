@@ -238,7 +238,6 @@ class MyWorkThread(threading.Thread):
         self.ignpath = ign_path.get()
         self.algo = getattr(hashlib, algo.get())
         self.sorting = SortingType.fromstr[sorting.get()]
-        # Possible To-Do for Later: For now, the only way to cancel a running operation is to close the GUI:
         self.daemon = True
     def run(self):
         with MyWorkThread.current_thread_lock:
