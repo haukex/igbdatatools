@@ -23,10 +23,8 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import os
 import stat
 import sys
-import io
-import typing
 from pathlib import Path
-from contextlib import contextmanager, nullcontext
+from contextlib import contextmanager
 from functools import singledispatch
 from tempfile import NamedTemporaryFile
 from collections.abc import Generator, Iterable
@@ -116,7 +114,7 @@ def is_windows_filename_bad(fn :str) -> bool:
         or fn[-1] in (' ', '.') )
 
 @contextmanager
-def replacer(file :str|os.PathLike|io.IOBase|typing.IO, *, binary :bool=False, encoding=None, errors=None, newline=None):
+def replacer(file :str|os.PathLike, *, binary :bool=False, encoding=None, errors=None, newline=None):
     """Replace a file by renaming a temporary file over the original.
 
     With this context manager, a temporary file is created in the same directory as the original file.
@@ -130,23 +128,15 @@ def replacer(file :str|os.PathLike|io.IOBase|typing.IO, *, binary :bool=False, e
     the options ``binary``, ``encoding``, ``errors``, and ``newline`` only apply to the output handle.
     Note that replacing over an open file does not work on Windows.
     """
-    if isinstance(file, str|os.PathLike):
-        fname = Path(file).resolve(strict=True)
-        if not fname.is_file(): raise ValueError(f"not a regular file: {fname}")
-        icm = fname.open(
-            mode = 'rb' if binary else 'r', encoding=encoding, errors=errors, newline=newline)
-        assert icm.name == str(fname)
-    elif isinstance(file, io.IOBase|typing.IO):
-        fname = Path(file.name).resolve(strict=True)
-        icm = nullcontext(file)
-    else: raise TypeError(f"file must be a filename or a file object, not {repr(file)}")
-    with icm as infh:
+    fname = Path(file).resolve(strict=True)
+    if not fname.is_file(): raise ValueError(f"not a regular file: {fname}")
+    with fname.open(mode = 'rb' if binary else 'r', encoding=encoding, errors=errors, newline=newline) as infh:
         origmode = stat.S_IMODE( os.stat(infh.fileno()).st_mode )
         with NamedTemporaryFile( dir=fname.parent, prefix="."+fname.name+"_", delete=False,
             mode = 'wb' if binary else 'w', encoding=encoding, errors=errors, newline=newline) as tf:
             try:
                 yield infh, tf
-            except Exception:
+            except BaseException:
                 tf.close()
                 os.unlink(tf.name)
                 raise

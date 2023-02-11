@@ -142,29 +142,14 @@ class TestFileUtils(unittest.TestCase):
             with open(tf.name, 'rb') as fh:
                 self.assertEqual(fh.read(), b"Hellu, Wurld")
 
-            # Already open handle
-            if sys.platform.startswith('win32'):  # pragma: no cover
-                print(f"Skipping test with open file", file=sys.stderr)
-                expect = "Hellu, Wurld"
-            else:
-                expect = "Heiiu, Wurid"
-                with open(tf.name) as ifh:
-                    with replacer(ifh) as (_, ofh):
-                        data = ifh.read()
-                        data = data.replace("l","i")
-                        ofh.write(data)
-            self.assertFalse( os.path.exists(ofh.name) )
-            with open(tf.name) as fh:
-                self.assertEqual(fh.read(), expect)
-
             # Failure inside of context
             with self.assertRaises(ProcessLookupError):
                 with replacer(tf.name) as (ifh, ofh):
                     ofh.write("oops")
                     raise ProcessLookupError("blam!")
             self.assertFalse( os.path.exists(ofh.name) )
-            with open(tf.name) as fh:
-                self.assertEqual(fh.read(), expect)
+            with open(tf.name, 'rb') as fh:
+                self.assertEqual(fh.read(), b"Hellu, Wurld")
 
             # Test errors
             with self.assertRaises(TypeError):
