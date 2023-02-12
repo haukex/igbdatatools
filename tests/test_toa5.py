@@ -92,8 +92,18 @@ class TestToa5(unittest.TestCase):
             toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger.CR1X", program_sig="2438", table_name="Hourly"),
             toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger.CR1X", program_sig="1234", table_name="Hourly"),
         )
-        self.assertEqual( toa5.envline_merge(envs),
-            toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger.CR1X", program_sig="1234|2438", table_name="Daily|Hourly") )
+        exp = toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger.CR1X", program_sig="1234|2438", table_name="Daily|Hourly")
+        with self.assertWarns(UserWarning):
+            got = toa5.envline_merge(envs)
+        self.assertEqual( exp, got )
+
+        envs2 = (
+            toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.04", program_name="CPU:TestLogger_v1.CR1X", program_sig="2438", table_name="Hourly" ),
+            toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger_v2.CR1X", program_sig="2438", table_name="Hourly"),
+            toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02", program_name="CPU:TestLogger_v3.CR1X", program_sig="1234", table_name="Hourly"),
+        )
+        exp2 = toa5.EnvironmentLine(station_name="TestLogger", logger_model="CR1000X", logger_serial="12342", logger_os="CR1000X.Std.03.02;CR1000X.Std.03.04", program_name="CPU:TestLogger_v1.CR1X;CPU:TestLogger_v2.CR1X;CPU:TestLogger_v3.CR1X", program_sig="1234;2438", table_name="Hourly")
+        self.assertEqual( exp2, toa5.envline_merge(envs2, sep=';') )
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

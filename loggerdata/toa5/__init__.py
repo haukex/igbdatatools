@@ -21,6 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 import csv
+import warnings
 from typing import NamedTuple
 from igbitertools import no_duplicates
 from loggerdata.metadata import ColumnHeader, MdTable
@@ -69,14 +70,18 @@ def read_header(csvreader :Iterator[Sequence[str]]) -> tuple[EnvironmentLine, tu
     return EnvironmentLine(**envline_dict), columns
 
 def meta2hdr(tblmd :MdTable) -> Generator[tuple[str, ...], None, None]:
+    """Create an environment line based on the logger's ``toa5_env_match`` metadata."""
     yield tuple( ("TOA5", *(getattr(tblmd.parent.toa5_env_match, c) for c in EnvironmentLine._fields if c!='table_name'), tblmd.name) )
     yield tuple( '' if c.name is None else c.name for c in tblmd.columns )
     yield tuple( '' if c.unit is None else c.unit for c in tblmd.columns )
     yield tuple( '' if c.prc  is None else c.prc  for c in tblmd.columns )
 
 def envline_merge(envs :Iterable[EnvironmentLine], *, sep :str='|') -> EnvironmentLine:
+    """Create an environment line by merging together a set of existing environment lines."""
     thesets :dict[str, set[str]] = { k: set() for k in EnvironmentLine._fields }
     for env in envs:
         for k in EnvironmentLine._fields:
             thesets[k].add( getattr(env, k) )
+    if len(thesets['table_name'])>1:
+        warnings.warn("Merged more than one table name")
     return EnvironmentLine(**{ k: sep.join( sorted( thesets[k] ) ) for k in EnvironmentLine._fields })
