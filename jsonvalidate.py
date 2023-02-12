@@ -68,9 +68,14 @@ def load_json_schema(file, *, verbose=False) -> jschon.JSONSchema:
     ``file`` can be either a filename, file object, or ``bytes``.
     Turning on ``verbose`` outputs status messages to STDOUT."""
     schema = jschon.JSONSchema(load_json(file), catalog=_catalog)
-    if schema.validate().valid:
-        if verbose: print(f"Schema {file!r} itself is valid")  # pragma: no cover
-    else: raise RuntimeError(f"Schema {file!r} is invalid")
+    result = schema.validate()
+    if result.valid:
+        if verbose:  # pragma: no cover
+            print(f"Schema {file!r} itself is valid")
+    else:
+        if verbose:  # pragma: no cover
+            pprint(result.output('basic'))
+        raise RuntimeError(f"Schema {file!r} is invalid")
     return schema
 
 def validate_json(schema :jschon.JSONSchema, file, *, verbose=False):
