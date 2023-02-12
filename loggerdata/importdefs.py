@@ -24,13 +24,12 @@ from enum import Enum
 from collections.abc import Sequence, Generator
 from typing import Optional, Self
 from more_itertools import first
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from functools import cached_property
-from datetime import datetime, timezone
 from fileutils import Filename
 from loggerdata import toa5
 from loggerdata.metadata import MdTable
-from datatypes import TimestampNoTz, TimestampWithTz
+from datatypes import TimestampNoTz, PythonDataTypes, NumPyDataTypes
 
 class DataImportError(RuntimeError): pass
 class NoMetadataMatch(DataImportError): pass
@@ -85,7 +84,7 @@ class Record:
                     raise ValueError(f"value {val!r} does not match {col.type}")
         return self
 
-    def fullrow_as_py(self) -> Generator:
+    def fullrow_as_py(self) -> Generator[PythonDataTypes, None, None]:
         """Convert the ``fullrow`` from strings to the corresponding Python types
         (except where column type information is not available)."""
         for val, col in zip(self.fullrow, self.tblmd.columns, strict=True):
@@ -95,7 +94,7 @@ class Record:
                 else: yield col.type.to_py(val)
             else: yield val
 
-    def fullrow_as_np(self) -> Generator:
+    def fullrow_as_np(self) -> Generator[NumPyDataTypes, None, None]:
         """Convert the ``fullrow`` from strings to the corresponding NumPy types."""
         if any( not col.type for col in self.tblmd.columns ):  # To-Do for Later: column types should eventually become mandatory (see metadata for similar note)
             raise TypeError(f"Every column in {self.tblmd.name} needs a type so it can be converted")

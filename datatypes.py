@@ -29,9 +29,13 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import re
 from collections.abc import Iterable
 from typing import Any, Optional
+from types import NoneType
 from datetime import datetime, timezone, tzinfo
 from decimal import Decimal
 import numpy
+
+PythonDataTypes = int|Decimal|datetime|NoneType
+NumPyDataTypes = numpy.uint32|numpy.int64|numpy.float64|numpy.datetime64|type(numpy.nan)
 
 class BaseType:
     """Abstract base class for data types implemented by this class."""
@@ -40,10 +44,10 @@ class BaseType:
     def check(self, value :str) -> bool:
         """Validate whether the given value is of this type."""
         raise NotImplementedError()  # pragma: no cover
-    def to_py(self, value :str):
+    def to_py(self, value :str) -> PythonDataTypes:
         """Convert a string to a Python object with a type corresponding to the input."""
         raise NotImplementedError()  # pragma: no cover
-    def to_np(self, value :str):
+    def to_np(self, value :str) -> NumPyDataTypes:
         """Convert a string to a NumPy object with a type corresponding to the input."""
         raise NotImplementedError()  # pragma: no cover
     def __eq__(self, other):
@@ -117,10 +121,10 @@ class Num(BaseType):
         if not isinstance(value, str): return False
         if value.lower() == 'nan': return True
         return bool(self._num_regex.fullmatch(value))
-    def to_py(self, value :str):
+    def to_py(self, value :str) -> Decimal:
         if not self.check(value): raise TypeError()
         return Decimal(value)
-    def to_np(self, value :str):
+    def to_np(self, value :str) -> numpy.float64:
         if not self.check(value): raise TypeError()
         return numpy.float64(value)
     def __eq__(self, other):
@@ -143,11 +147,11 @@ class NonNegInt(BaseType):
         if value.lower() == 'nan': return True
         if self._uint_regex.fullmatch(value) is None: return False
         return 0 <= int(value) < 2**31
-    def to_py(self, value :str):
+    def to_py(self, value :str) -> int|None:
         if not self.check(value): raise TypeError()
         if value.lower() == 'nan': return None
         return int(value)
-    def to_np(self, value :str):
+    def to_np(self, value :str) -> numpy.uint32|type(numpy.nan):
         if not self.check(value): raise TypeError()
         if value.lower() == 'nan': return numpy.nan
         return numpy.uint32(value)
@@ -162,11 +166,11 @@ class BigInt(BaseType):
         if value.lower() == 'nan': return True
         if self._int_regex.fullmatch(value) is None: return False
         return -2**63 <= int(value) < 2**63  # note Python 3 ints have unlimited precision
-    def to_py(self, value :str):
+    def to_py(self, value :str) -> int|None:
         if not self.check(value): raise TypeError()
         if value.lower() == 'nan': return None
         return int(value)
-    def to_np(self, value :str):
+    def to_np(self, value :str) -> numpy.int64|type(numpy.nan):
         if not self.check(value): raise TypeError()
         if value.lower() == 'nan': return numpy.nan
         return numpy.int64(value)
@@ -185,24 +189,24 @@ class TimestampNoTz(BaseType):
     np_type = numpy.datetime64
     def check(self, value :str) -> bool:
         return bool(self._timestamp_regex.fullmatch(value))
-    def to_py(self, value :str):
+    def to_py(self, value :str) -> datetime:
         """Convert a string to a ``datetime`` object.
 
         *Warning:* No timezone information is taken into account! Use ``to_py_tz`` instead.
         """
         if not self.check(value): raise TypeError()
         return datetime.fromisoformat(value)
-    def to_np(self, value :str):
+    def to_np(self, value :str) -> numpy.datetime64:
         """Convert a string to a NumPy ``datetime64`` value.
 
         *Warning:* No timezone information is taken into account! Use ``to_np_tz`` instead.
         """
         if not self.check(value): raise TypeError()
         return numpy.datetime64(value)
-    def to_py_tz(self, value :str, tz :tzinfo):
+    def to_py_tz(self, value :str, tz :tzinfo) -> datetime:
         """Convert a string to a ``datetime`` object, with timezone information."""
         return self.to_py(value).replace(tzinfo=tz)
-    def to_np_tz(self, value :str, tz :tzinfo):
+    def to_np_tz(self, value :str, tz :tzinfo) -> numpy.datetime64:
         """Convert a string to a NumPy ``datetime64`` value in UTC, converted using the timezone information.
 
         *Note* that the NumPy type ``datetime64`` does *not* store time zone information.
@@ -228,11 +232,11 @@ class TimestampWithTz(BaseType):
     np_type = numpy.datetime64
     def check(self, value :str) -> bool:
         return bool(self._timestamptz_regex.fullmatch(value))
-    def to_py(self, value :str):
+    def to_py(self, value :str) -> datetime:
         """Convert a string to ``datetime`` object."""
         if not self.check(value): raise TypeError()
         return datetime.fromisoformat(value)
-    def to_np(self, value :str):
+    def to_np(self, value :str) -> numpy.datetime64:
         """Convert a string to a NumPy ``datetime64`` value in UTC.
 
         *Note* that the NumPy type ``datetime64`` does *not* store time zone information.
@@ -248,10 +252,10 @@ class OnlyNan(BaseType):
     """
     def check(self, value :str) -> bool:
         return isinstance(value, str) and value.lower() == 'nan'
-    def to_py(self, value :str):
+    def to_py(self, value :str) -> None:
         if not self.check(value): raise TypeError()
         return None
-    def to_np(self, value :str):
+    def to_np(self, value :str) -> type(numpy.nan):
         if not self.check(value): raise TypeError()
         return numpy.nan
 
