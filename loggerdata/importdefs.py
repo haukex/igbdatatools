@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 from enum import Enum
-from collections.abc import Sequence
+from collections.abc import Sequence, Generator
 from typing import Optional, Self
 from more_itertools import first
 from dataclasses import dataclass, replace
@@ -85,26 +85,24 @@ class Record:
                     raise ValueError(f"value {val!r} does not match {col.type}")
         return self
 
-    def tzconv(self) -> Self:
-        """Convert timestamp columns into UTC time.
-
-        *Note* that even ``TimestampNoTz`` column values will be turned into UTC with
-        a ``Z`` appended, i.e. they will no longer match the ``TimestampNoTz`` type!
-
-        Returns a *new* object."""
-        neworigrow :list[str] = []
-        for val, vi in zip(self.origrow, self.variant, strict=True):
-            col = self.tblmd.columns[vi]
+    def fullrow_as_py(self) -> Generator:
+        """Convert the ``fullrow`` from strings to the corresponding Python types
+        (except where column type information is not available)."""
+        for val, col in zip(self.fullrow, self.tblmd.columns, strict=True):
             if col.type:  # To-Do for Later: column types should eventually become mandatory (see metadata for similar note)
                 if isinstance(col.type, TimestampNoTz):
-                    assert self.tblmd.parent.tz
-                    val = datetime.fromisoformat(val).replace(tzinfo=self.tblmd.parent.tz) \
-                        .astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
-                elif isinstance(col.type, TimestampWithTz):
-                    val = datetime.fromisoformat(val) \
-                        .astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
-            neworigrow.append(val)
-        return replace(self, origrow=tuple(neworigrow))
+                    yield col.type.to_py_tz(val, self.tblmd.parent.tz)
+                else: yield col.type.to_py(val)
+            else: yield val
+
+    def fullrow_as_np(self) -> Generator:
+        """Convert the ``fullrow`` from strings to the corresponding NumPy types."""
+        if any( not col.type for col in self.tblmd.columns ):  # To-Do for Later: column types should eventually become mandatory (see metadata for similar note)
+            raise TypeError(f"Every column in {self.tblmd.name} needs a type so it can be converted")
+        for val, col in zip(self.fullrow, self.tblmd.columns, strict=True):
+            if isinstance(col.type, TimestampNoTz):
+                yield col.type.to_np_tz(val, self.tblmd.parent.tz)
+            else: yield col.type.to_np(val)
 
 @dataclass(kw_only=True, frozen=True)
 class Toa5Record(Record):

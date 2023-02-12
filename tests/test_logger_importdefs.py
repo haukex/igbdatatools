@@ -22,6 +22,8 @@ along with this program. If not, see https://www.gnu.org/licenses/
 """
 import unittest
 from dataclasses import replace
+from datetime import datetime
+import numpy
 from loggerdata.metadata import load_logger_metadata
 from loggerdata.importdefs import Record, DataFileType, RecordError
 
@@ -45,7 +47,7 @@ class TestLoggerDataImportDefs(unittest.TestCase):
         self.assertEqual( replace(rec, filenames=('bar.csv',)).source, "bar.csv:42" )
         self.assertEqual( replace(rec, filenames='bar.csv').source, "bar.csv:42" )
 
-    def test_record_typecheck_tzconv(self):
+    def test_record_fullrow_as_py_np(self):
         with self.assertWarns(UserWarning):
             md2 = load_logger_metadata(b'{"logger_name":"Bar","toa5_env_match":{"station_name":"Bar"},"tz":"-03:30","tables":{"bar":'
                 b'{"prikey":0,"columns":[ {"name":"Hello","type":"TimestampNoTz"}, {"name":"xyz"}, {"name":"World","type":"TimestampWithTz"}, {"name":"iii","type":"NonNegInt"} ]}}}')
@@ -53,23 +55,18 @@ class TestLoggerDataImportDefs(unittest.TestCase):
             Record(origrow=("2023-01-02 03:04:05","","2023-01-02 03:04:56+04:3","42"), tblmd=md2.tables['bar'],
                    variant=(0,1,2,3), filenames=(), srcline=3, filetype=DataFileType.TOA5).typecheck()
         rec = Record(origrow=("2023-01-02 03:04:05","","2023-01-02 03:04:56+04:30","42"), tblmd=md2.tables['bar'],
-                     variant=(0,1,2,3), filenames=(), srcline=3, filetype=DataFileType.TOA5).typecheck().tzconv()
-        self.assertEqual( rec.fullrow, ("2023-01-02 06:34:05Z","","2023-01-01 22:34:56Z","42") )
-        with self.assertRaises(ValueError):
-            # because now the TimestampNoTz column has a "Z" appended!
-            rec.typecheck()
-        # and a few more tzconv checks
+                     variant=(0,1,2,3), filenames=(), srcline=3, filetype=DataFileType.TOA5).typecheck()
+        self.assertEqual( tuple(rec.fullrow_as_py()), (datetime.fromisoformat("2023-01-02 06:34:05Z"),"",datetime.fromisoformat("2023-01-01 22:34:56Z"),42) )
+        with self.assertRaises(TypeError):
+            tuple(rec.fullrow_as_np())
         with self.assertWarns(UserWarning):
             md3 = load_logger_metadata(b'{"logger_name":"Quz","toa5_env_match":{"station_name":"Quz"},"tz":"Europe/Berlin","tables":{"quz":'
-                b'{"columns":[ {"name":"TIMESTAMP","unit":"TS","type":"TimestampNoTz"}, {"name":"Other","type":"TimestampWithTz"} ]}}}')
-        tzconv_tests = (
-            (("2022-12-01 14:00:00","2021-06-18 14:00:00 -10:00"), ("2022-12-01 13:00:00Z","2021-06-19 00:00:00Z")),
-            (("2022-06-01 13:00:00","2021-06-19 07:00:00+07:00"),  ("2022-06-01 11:00:00Z","2021-06-19 00:00:00Z")),
-            (("2021-06-20 00:00:00","2021-06-19 00:00:00Z"),       ("2021-06-19 22:00:00Z","2021-06-19 00:00:00Z")),
-        )
-        for row, exp in tzconv_tests:
-            self.assertEqual(Record(origrow=row, tblmd=md3.tables['quz'], variant=(0,1), filenames=(),
-                srcline=5, filetype=DataFileType.TOA5).typecheck().tzconv().fullrow, exp )
+                b'{"columns":[ {"name":"TIMESTAMP","unit":"TS","type":"TimestampNoTz"}, {"name":"Other","type":"TimestampWithTz"},'
+                b'{"name":"iii","type":"NonNegInt"}, {"name":"jjj","type":"BigInt"} ]}}}')
+        rec2 = Record(origrow=("2022-12-01 14:00:00","2021-06-18 14:00:00 -10:00","42","-5624536"), tblmd=md3.tables['quz'],
+                      variant=(0,1,2,3), filenames=(), srcline=5, filetype=DataFileType.TOA5).typecheck()
+        self.assertEqual( tuple(rec2.fullrow_as_py()), (datetime.fromisoformat("2022-12-01 13:00:00Z"),datetime.fromisoformat("2021-06-19 00:00:00Z"),42,-5624536) )
+        self.assertEqual( tuple(rec2.fullrow_as_np()), (numpy.datetime64("2022-12-01 13:00:00"),numpy.datetime64("2021-06-19 00:00:00"),numpy.uint32(42),numpy.int64(-5624536)) )
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -29,7 +29,7 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import re
 from collections.abc import Iterable
 from typing import Any, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, tzinfo
 from decimal import Decimal
 import numpy
 
@@ -176,6 +176,9 @@ class TimestampNoTz(BaseType):
 
     Note that it only accepts a space as the separator between date and time, where ISO8601 requires a ``T``,
     otherwise it is compatible with a subset of ISO8601.
+
+    *Warning:* The NumPy type ``datetime64`` does *not* store time zone information. Timestamps should
+    be converted to a known time zone such as UTC, as is done by ``to_np_tz``.
     """
     _timestamp_regex = re.compile(r'''\A\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\Z''')
     pg_type = "TIMESTAMP"
@@ -183,11 +186,30 @@ class TimestampNoTz(BaseType):
     def check(self, value :str) -> bool:
         return bool(self._timestamp_regex.fullmatch(value))
     def to_py(self, value :str):
+        """Convert a string to a ``datetime`` object.
+
+        *Warning:* No timezone information is taken into account! Use ``to_py_tz`` instead.
+        """
         if not self.check(value): raise TypeError()
         return datetime.fromisoformat(value)
     def to_np(self, value :str):
+        """Convert a string to a NumPy ``datetime64`` value.
+
+        *Warning:* No timezone information is taken into account! Use ``to_np_tz`` instead.
+        """
         if not self.check(value): raise TypeError()
         return numpy.datetime64(value)
+    def to_py_tz(self, value :str, tz :tzinfo):
+        """Convert a string to a ``datetime`` object, with timezone information."""
+        return self.to_py(value).replace(tzinfo=tz)
+    def to_np_tz(self, value :str, tz :tzinfo):
+        """Convert a string to a NumPy ``datetime64`` value in UTC, converted using the timezone information.
+
+        *Note* that the NumPy type ``datetime64`` does *not* store time zone information.
+        """
+        if not self.check(value): raise TypeError()
+        return numpy.datetime64( datetime.fromisoformat(value).replace(tzinfo=tz)
+                                 .astimezone(timezone.utc).replace(tzinfo=None).isoformat() )
 
 class TimestampWithTz(BaseType):
     """This data type excepts a timestamp similar to ISO8601, with a time zone specifier.
@@ -198,8 +220,8 @@ class TimestampWithTz(BaseType):
     Though many libraries and systems (like Posgres) allow for the time zone specifier with only hours,
     not minutes, SQLite3 functions do require the minutes, so for maximum compatibility we require it too.
 
-    *Warning:* The NumPy type ``datetime64`` does *not* store time zone information. Timestamps should
-    be converted to a known time zone such as UTC, or the time zone information must be stored separately.
+    *Warning:* The NumPy type ``datetime64`` does *not* store time zone information.
+    Timestamps should be converted to a known time zone such as UTC, as is done by the ``to_np`` function.
     """
     _timestamptz_regex = re.compile(r'''\A\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?: ?[-+]\d\d:\d\d|Z)\Z''')
     pg_type = "TIMESTAMP WITH TIME ZONE"
@@ -207,11 +229,17 @@ class TimestampWithTz(BaseType):
     def check(self, value :str) -> bool:
         return bool(self._timestamptz_regex.fullmatch(value))
     def to_py(self, value :str):
+        """Convert a string to ``datetime`` object."""
         if not self.check(value): raise TypeError()
         return datetime.fromisoformat(value)
     def to_np(self, value :str):
+        """Convert a string to a NumPy ``datetime64`` value in UTC.
+
+        *Note* that the NumPy type ``datetime64`` does *not* store time zone information.
+        """
         if not self.check(value): raise TypeError()
-        return numpy.datetime64( datetime.fromisoformat(value).astimezone(timezone.utc).replace(tzinfo=None).isoformat() )
+        return numpy.datetime64( datetime.fromisoformat(value)
+                                 .astimezone(timezone.utc).replace(tzinfo=None).isoformat() )
 
 class OnlyNan(BaseType):
     """This data type only accepts ``NaN``.

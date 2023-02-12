@@ -52,9 +52,7 @@ def simple_file_source(paths :AnyPaths) -> Generator[ tuple[tuple[Path], typing.
             yield (pth,), fh
 
 def read_records(*, source :Iterable[tuple[ Sequence[PurePath], typing.IO[bytes]|io.RawIOBase|io.BufferedIOBase ]],
-                 metadatas :MdCollection|Metadata|MdTable,
-                 #TODO Later: Consider perhaps removing the tzconv option from this function?
-                 tzconv :bool = False, ignore_notablematch :bool = True) -> Generator[Record, None, None]:
+                 metadatas :MdCollection|Metadata|MdTable, ignore_notablematch :bool = True) -> Generator[Record, None, None]:
     """This generator reads a set of input files and returns ``Record``s.
 
     ``source`` can come from ``simple_file_source``, or it can come from e.g. ``unzipwalk``
@@ -76,5 +74,4 @@ def read_records(*, source :Iterable[tuple[ Sequence[PurePath], typing.IO[bytes]
                 warnings.warn(f"skipping unknown file {fns!r}")
                 continue
             else: raise RuntimeError("enum not covered completely")  # pragma: no cover
-            for rec in datasrc:
-                yield rec.typecheck().tzconv() if tzconv else rec.typecheck()
+            for rec in datasrc: yield rec.typecheck()

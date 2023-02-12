@@ -24,6 +24,7 @@ import unittest
 import datatypes
 from decimal import Decimal
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import numpy
 
 class TestDataTypes(unittest.TestCase):
@@ -177,6 +178,14 @@ class TestDataTypes(unittest.TestCase):
         self.assertIsInstance( uut.to_np("2023-01-02 03:04:05"), numpy.datetime64 )
         with self.assertRaises(TypeError): uut.to_py(bad[0])
         with self.assertRaises(TypeError): uut.to_np(bad[0])
+        tz = ZoneInfo('Europe/Berlin')
+        self.assertEqual( uut.to_py_tz("2022-12-01 14:00:00", tz), datetime.fromisoformat("2022-12-01T13:00:00Z") )
+        self.assertEqual( uut.to_py_tz("2022-06-01 13:00:00", tz), datetime.fromisoformat("2022-06-01T11:00:00Z") )
+        self.assertEqual( uut.to_py_tz("2021-06-20 00:00:00", tz), datetime.fromisoformat("2021-06-19T22:00:00Z") )
+        self.assertEqual( uut.to_np_tz("2022-12-01 14:00:00", tz), numpy.datetime64("2022-12-01T13:00:00") )
+        self.assertEqual( uut.to_np_tz("2022-06-01 13:00:00", tz), numpy.datetime64("2022-06-01T11:00:00") )
+        self.assertEqual( uut.to_np_tz("2021-06-20 00:00:00", tz), numpy.datetime64("2021-06-19T22:00:00") )
+        with self.assertRaises(TypeError): uut.to_np_tz(bad[0], tz)
 
     def test_datatypes_num(self):
         uuts = [
