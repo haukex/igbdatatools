@@ -39,6 +39,13 @@ import datatypes
 short_units :dict[str,str] = json.loads(pkgutil.get_data('loggerdata', 'short_units.json').decode('UTF-8'))
 del short_units['$comment']
 
+class LoggerOrigDataType(Enum):
+    CB_FP2 = 0
+    CB_IEEE4 = 1  # aka Float
+    # Note that the Campbell manuals don't actually specify what the internal type of the following are. Maybe Long?
+    CB_Timestamp = 2
+    CB_Integer = 3
+
 class ColumnHeader(NamedTuple):
     """Class (named tuple) representing a column header.
 
@@ -125,6 +132,7 @@ class MdBaseCol(MdBase):
 class MdColumn(MdBaseCol):
     """A full column definition."""
     type:    Optional[datatypes.BaseType] = None  #TODO Later: won't be optional in the future (once all our logger metadata is complete)
+    lodt:    Optional[LoggerOrigDataType] = None
     var:     Optional[str] = None
     desc:    Optional[str] = None
     plotgrp: Optional[str] = None
@@ -135,6 +143,8 @@ class MdColumn(MdBaseCol):
             # noinspection PyTypeChecker
             self.type = datatypes.from_string(self.type)  # raises error on failed parse
     def validate(self):
+        if self.lodt is not None and not isinstance(self.lodt, LoggerOrigDataType):
+            raise ValueError(f"not a LoggerOriginalDataType: {self.lodt!r}")
         return super().validate()
 
 class MappingType(Enum):
@@ -400,6 +410,14 @@ def load_logger_metadata(file) -> Metadata:
             tempvar[None] = { "k": [], "i": [] }
         tbl_vars = set()  # which variants are actually used in this table
         for i, col in enumerate(tmd['columns']):
+            if col.lodt is not None:
+                match col.lodt:
+                    case 'FP2':   col.lodt = LoggerOrigDataType.CB_FP2
+                    case 'IEEE4': col.lodt = LoggerOrigDataType.CB_IEEE4
+                    case 'TS':    col.lodt = LoggerOrigDataType.CB_Timestamp
+                    case 'Int':   col.lodt = LoggerOrigDataType.CB_Integer
+                    # this shouldn't happen because it's validated by the schema
+                    case _: raise ValueError(f"column {col.name} invalid lodt {col.lodt!r}")  # pragma: no cover
             if col.sens is not None:
                 if 'sensors' not in md or col.sens not in md['sensors']:
                     raise ValueError(f"column {col.name} references unknown sensor {col.sens}")

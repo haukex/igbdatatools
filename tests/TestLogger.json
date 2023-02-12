@@ -15,14 +15,14 @@
 	"tables": {
 		"Daily": {
 			"columns": [
-				{ "name": "TIMESTAMP",   "unit": "TS",                  "type": "TimestampNoTz" },
-				{ "name": "RECORD",      "unit": "RN",                  "type": "NonNegInt"     },
-				{ "name": "BattV_Min",   "unit": "Volts", "prc": "Min", "type": "Num(4,2)"      },
-				{ "name": "BattV_TMn",                    "prc": "TMn", "type": "TimestampNoTz" },
-				{ "name": "PTemp_C_Min", "unit": "Deg C", "prc": "Min", "type": "Num(5,2)",     "plotgrp": "PTemp", "desc": "Panel Temperature Minimum" },
-				{ "name": "PTemp_C_TMn",                  "prc": "TMn", "type": "TimestampNoTz" },
-				{ "name": "PTemp_C_Max", "unit": "Deg C", "prc": "Max", "type": "Num(5,2)",     "plotgrp": "PTemp" },
-				{ "name": "PTemp_C_TMx",                  "prc": "TMx", "type": "TimestampNoTz" }
+				{ "name": "TIMESTAMP",   "unit": "TS",                  "type": "TimestampNoTz", "lodt": "TS"    },
+				{ "name": "RECORD",      "unit": "RN",                  "type": "NonNegInt",     "lodt": "Int"   },
+				{ "name": "BattV_Min",   "unit": "Volts", "prc": "Min", "type": "Num(4,2)",      "lodt": "IEEE4" },
+				{ "name": "BattV_TMn",                    "prc": "TMn", "type": "TimestampNoTz", "lodt": "TS"    },
+				{ "name": "PTemp_C_Min", "unit": "Deg C", "prc": "Min", "type": "Num(5,2)",      "lodt": "FP2",  "plotgrp": "PTemp", "desc": "Panel Temperature Minimum" },
+				{ "name": "PTemp_C_TMn",                  "prc": "TMn", "type": "TimestampNoTz", "lodt": "TS"    },
+				{ "name": "PTemp_C_Max", "unit": "Deg C", "prc": "Max", "type": "Num(5,2)",      "lodt": "FP2",  "plotgrp": "PTemp" },
+				{ "name": "PTemp_C_TMx",                  "prc": "TMx", "type": "TimestampNoTz", "lodt": "TS"    }
 			]
 		},
 		"Hourly": {

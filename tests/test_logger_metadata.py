@@ -22,7 +22,8 @@ along with this program. If not, see https://www.gnu.org/licenses/
 """
 import unittest
 from pathlib import Path
-from loggerdata.metadata import load_logger_metadata, MdBaseCol, MdColumn, MdMapEntry, MdMapping, MappingType, MdTable, Toa5EnvMatch, Metadata, LoggerType, ColumnHeader, MdCollection
+from loggerdata.metadata import load_logger_metadata, MdBaseCol, MdColumn, MdMapEntry, MdMapping, MappingType, \
+    MdTable, Toa5EnvMatch, Metadata, LoggerType, ColumnHeader, MdCollection, LoggerOrigDataType
 from zoneinfo import ZoneInfo
 from datetime import datetime, timedelta, timezone
 from datatypes import TimestampNoTz, NonNegInt, Num
@@ -48,14 +49,14 @@ _TestLogger_md = Metadata(
             name = "Daily",
             prikey = 0,
             columns = [
-                MdColumn( name="TIMESTAMP",   unit="TS",               type=TimestampNoTz(),     ),
-                MdColumn( name="RECORD",      unit="RN",               type=NonNegInt(),         ),
-                MdColumn( name="BattV_Min",   unit="Volts", prc="Min", type=Num(4,2),            ),
-                MdColumn( name="BattV_TMn",                 prc="TMn", type=TimestampNoTz(),     ),
-                MdColumn( name="PTemp_C_Min", unit="Deg C", prc="Min", type=Num(5,2),            plotgrp="PTemp", desc= "Panel Temperature Minimum", ),
-                MdColumn( name="PTemp_C_TMn",               prc="TMn", type=TimestampNoTz(),     ),
-                MdColumn( name="PTemp_C_Max", unit="Deg C", prc="Max", type=Num(5,2),            plotgrp="PTemp"),
-                MdColumn( name="PTemp_C_TMx",               prc="TMx", type=TimestampNoTz(),     ),
+                MdColumn( name="TIMESTAMP",   unit="TS",               type=TimestampNoTz(),     lodt=LoggerOrigDataType.CB_Timestamp ),
+                MdColumn( name="RECORD",      unit="RN",               type=NonNegInt(),         lodt=LoggerOrigDataType.CB_Integer   ),
+                MdColumn( name="BattV_Min",   unit="Volts", prc="Min", type=Num(4,2),            lodt=LoggerOrigDataType.CB_IEEE4     ),
+                MdColumn( name="BattV_TMn",                 prc="TMn", type=TimestampNoTz(),     lodt=LoggerOrigDataType.CB_Timestamp ),
+                MdColumn( name="PTemp_C_Min", unit="Deg C", prc="Min", type=Num(5,2),            lodt=LoggerOrigDataType.CB_FP2,      plotgrp="PTemp", desc= "Panel Temperature Minimum", ),
+                MdColumn( name="PTemp_C_TMn",               prc="TMn", type=TimestampNoTz(),     lodt=LoggerOrigDataType.CB_Timestamp ),
+                MdColumn( name="PTemp_C_Max", unit="Deg C", prc="Max", type=Num(5,2),            lodt=LoggerOrigDataType.CB_FP2,      plotgrp="PTemp"),
+                MdColumn( name="PTemp_C_TMx",               prc="TMx", type=TimestampNoTz(),     lodt=LoggerOrigDataType.CB_Timestamp ),
             ],
             variants = {
                 (ColumnHeader("TIMESTAMP", "TS", ""), ColumnHeader("RECORD", "RN", ""), ColumnHeader("BattV_Min", "Volts", "Min"),
@@ -262,6 +263,9 @@ class TestLoggerMetadata(unittest.TestCase):
             md.tables['foo'].columns[0].type = TimestampNoTz()
             with self.assertWarns(UserWarning) as wcm: md.validate()
             self.assertEqual("Table foo has TimestampNoTz columns and non-UTC timezone (converstion to UTC recommended!)", str(wcm.warning))
+        with tempcopy(bmd) as md:
+            md.tables['foo'].columns[0].lodt = 'Foo'
+            with self.assertRaises(ValueError): md.validate()
 
     def test_metadata_collection(self):
         md1 = load_logger_metadata( Path(__file__).parent/'TestLogger.json' )

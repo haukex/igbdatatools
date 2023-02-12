@@ -78,6 +78,7 @@
 								"unit":    { "type": "string", "$comment": "further validation in code" },
 								"prc":     { "type": "string", "$comment": "further validation in code" },
 								"type":    { "type": "string", "$comment": "further validation in code" },
+								"lodt":    { "enum": ["FP2","IEEE4","TS","Int"], "$comment": "Logger Original Data Type" },
 								"var":     { "$ref": "#/$defs/ident", "$comment": "must reference a variant" },
 								"plotgrp": { "$ref": "#/$defs/ident" },
 								"sens":    { "$ref": "#/$defs/ident", "$comment": "must reference a sensor" },
