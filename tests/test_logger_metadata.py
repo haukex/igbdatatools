@@ -23,7 +23,7 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import unittest
 from pathlib import Path
 from loggerdata.metadata import load_logger_metadata, MdBaseCol, MdColumn, MdMapEntry, MdMapping, MappingType, \
-    MdTable, Toa5EnvMatch, Metadata, LoggerType, ColumnHeader, MdCollection, LoggerOrigDataType
+    MdTable, Toa5EnvMatch, Metadata, LoggerType, ColumnHeader, MdCollection, LoggerOrigDataType, TimeRange
 from zoneinfo import ZoneInfo
 from datetime import datetime, timedelta, timezone
 from datatypes import TimestampNoTz, NonNegInt, Num
@@ -44,6 +44,13 @@ _TestLogger_md = Metadata(
         "acme42": "Acme Pressure and Humidity Sensor #42",
         "acme532": "Acme Model 532 Air Temperature Sensor",
     },
+    known_gaps = (
+        TimeRange(why="example missing record", start=datetime.fromisoformat("2021-06-19 13:00:00Z")),
+        TimeRange(why="example gap", start=datetime.fromisoformat("2021-06-19 15:00:00Z"), end=datetime.fromisoformat("2021-06-19 17:00:00Z")),
+    ),
+    skip_recs = (
+        TimeRange(why="example bad record (duplicate TS with differing data)", start=datetime.fromisoformat("2021-06-19 19:00:00Z")),
+    ),
     tables = {
         "Daily": MdTable(
             name = "Daily",
@@ -266,6 +273,14 @@ class TestLoggerMetadata(unittest.TestCase):
         with tempcopy(bmd) as md:
             md.tables['foo'].columns[0].lodt = 'Foo'
             with self.assertRaises(ValueError): md.validate()
+        with tempcopy(bmd) as md:
+            md.tz = None
+            md.known_gaps = (TimeRange(why="x",start=datetime.fromisoformat("2023-01-02 03:04:05")),)
+            with self.assertRaises(ValueError): md.validate()
+        with tempcopy(bmd) as md:
+            md.tz = None
+            md.known_gaps = (TimeRange(why="x",start=datetime.fromisoformat("2023-01-02 03:04:05Z"),end=datetime.fromisoformat("2023-01-02 03:04:06")),)
+            with self.assertRaises(ValueError): md.validate()
 
     def test_metadata_collection(self):
         md1 = load_logger_metadata( Path(__file__).parent/'TestLogger.json' )
@@ -322,6 +337,81 @@ class TestLoggerMetadata(unittest.TestCase):
         with tempcopy(md2) as md4:
             md4.logger_name = md1.logger_name
             with self.assertRaises(ValueError): MdC(md1,md4)  # duplicate logger name
+
+    def test_timerange(self):
+        TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:04:05Z"), end=datetime.fromisoformat("2023-01-02 03:04:06Z")).validate()
+        with self.assertRaises(ValueError):
+            TimeRange(why=" \t\n ", start=datetime.fromisoformat("2023-01-02 03:04:05Z")).validate()
+        with self.assertRaises(ValueError):
+            TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:04:05Z"), end=datetime.fromisoformat("2023-01-02 03:04:05Z")).validate()
+        with self.assertRaises(ValueError):
+            TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:04:05Z"), end=datetime.fromisoformat("2023-01-02 03:04:04Z")).validate()
+        def mkrngset(*inp):
+            for x,y in inp:
+                yield TimeRange(why=x, start=datetime.fromisoformat(x), end=datetime.fromisoformat(y) if y else None)
+        TimeRange.validate_set( tuple(mkrngset(
+            ("2023-01-02 03:04:00Z", "2023-01-02 03:04:30Z"),
+            ("2023-01-02 03:05:00Z", "2023-01-02 03:05:30Z"),
+            ("2023-01-02 03:06:00Z", "2023-01-02 03:06:30Z"),
+            ("2023-01-02 03:07:00Z", None),
+            ("2023-01-02 03:08:00Z", None),
+        )) )
+        with self.assertRaises(ValueError):
+            TimeRange.validate_set( tuple(mkrngset(
+                ("2023-01-02 03:04:00Z", "2023-01-02 03:04:30Z"),
+                ("2023-01-02 03:04:10Z", "2023-01-02 03:04:20Z"),  # inside the first set
+                ("2023-01-02 03:06:00Z", "2023-01-02 03:06:30Z"),
+                ("2023-01-02 03:07:00Z", None),
+                ("2023-01-02 03:08:00Z", None),
+            )) )
+        with self.assertRaises(ValueError):
+            TimeRange.validate_set( tuple(mkrngset(
+                ("2023-01-02 03:05:10Z", "2023-01-02 03:05:20Z"),  # inside the second set
+                ("2023-01-02 03:05:00Z", "2023-01-02 03:05:30Z"),
+                ("2023-01-02 03:06:00Z", "2023-01-02 03:06:30Z"),
+                ("2023-01-02 03:07:00Z", None),
+                ("2023-01-02 03:08:00Z", None),
+            )) )
+        with self.assertRaises(ValueError):
+            TimeRange.validate_set( tuple(mkrngset(
+                ("2023-01-02 03:04:00Z", "2023-01-02 03:05:10Z"),  # overlaps with second set
+                ("2023-01-02 03:05:00Z", "2023-01-02 03:05:30Z"),
+                ("2023-01-02 03:06:00Z", "2023-01-02 03:06:30Z"),
+                ("2023-01-02 03:07:00Z", None),
+                ("2023-01-02 03:08:00Z", None),
+            )) )
+        with self.assertRaises(ValueError):
+            TimeRange.validate_set( tuple(mkrngset(
+                ("2023-01-02 03:04:00Z", "2023-01-02 03:04:30Z"),
+                ("2023-01-02 03:04:20Z", "2023-01-02 03:05:30Z"),  # overlaps with first set
+                ("2023-01-02 03:06:00Z", "2023-01-02 03:06:30Z"),
+                ("2023-01-02 03:07:00Z", None),
+                ("2023-01-02 03:08:00Z", None),
+            )) )
+        with self.assertRaises(ValueError):
+            TimeRange.validate_set( tuple(mkrngset(
+                ("2023-01-02 03:04:00Z", "2023-01-02 03:04:30Z"),
+                ("2023-01-02 03:04:15Z", None),  # inside the first set
+                ("2023-01-02 03:05:00Z", "2023-01-02 03:05:30Z"),
+                ("2023-01-02 03:06:00Z", "2023-01-02 03:06:30Z"),
+                ("2023-01-02 03:07:00Z", None),
+            )) )
+        with self.assertRaises(ValueError):
+            TimeRange.validate_set( tuple(mkrngset(
+                ("2023-01-02 03:04:15Z", None),  # inside the first set
+                ("2023-01-02 03:04:00Z", "2023-01-02 03:04:30Z"),
+                ("2023-01-02 03:05:00Z", "2023-01-02 03:05:30Z"),
+                ("2023-01-02 03:06:00Z", "2023-01-02 03:06:30Z"),
+                ("2023-01-02 03:07:00Z", None),
+            )) )
+        with self.assertRaises(ValueError):
+            TimeRange.validate_set( tuple(mkrngset(
+                ("2023-01-02 03:04:00Z", "2023-01-02 03:04:30Z"),
+                ("2023-01-02 03:05:00Z", "2023-01-02 03:05:30Z"),
+                ("2023-01-02 03:06:00Z", "2023-01-02 03:06:30Z"),
+                ("2023-01-02 03:07:00Z", None),
+                ("2023-01-02 03:07:00Z", None),  # same as previous timestamp
+            )) )
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

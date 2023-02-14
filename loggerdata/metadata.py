@@ -25,7 +25,7 @@ import json
 import pkgutil
 import warnings
 from dataclasses import dataclass, field, fields
-from itertools import chain
+from itertools import chain, combinations
 from enum import Enum
 from datetime import datetime, timedelta, timezone, tzinfo
 from zoneinfo import ZoneInfo
@@ -227,6 +227,35 @@ class Toa5EnvMatch(MdBase):
 class LoggerType(Enum):
     TOA5 = 1
 
+class TimeRange(NamedTuple):
+    """Represents either a time range or a timestamp (when ``end`` is ``None``)."""
+    why :str
+    start :datetime
+    end :Optional[datetime] = None
+    def validate(self):
+        if not self.why or self.why.isspace():
+            raise ValueError('range "why" is empty')
+        if self.end and self.end <= self.start:
+            raise ValueError(f"range end <= start ({self!r})")
+    @staticmethod
+    def validate_set(ranges :Sequence['TimeRange']):
+        for x, y in combinations(ranges, 2):
+            if x.end and y.end:  # two ranges
+                # To-Do for Later: I think this isn't the most efficient set of checks
+                # x---x or  x-x  or x---x   or   x---x
+                #  y-y     y---y      y---y    y---y
+                bad = x.start < y.start < x.end and x.start < y.end < x.end \
+                      or y.start < x.start < y.end and y.start < x.end < y.end \
+                      or x.start < y.start < x.end or x.start < y.end < x.end
+            elif x.end:  # x is a range, y is not
+                bad = x.start < y.start < x.end
+            elif y.end:  # y is a range, x is not
+                bad = y.start < x.start < y.end
+            else:  # two timestamps
+                bad = x.start == y.start
+            if bad:
+                raise ValueError(f"overlapping ranges in a set: {x=} {y=}")
+
 @dataclass(kw_only=True)
 class Metadata(MdBase):
     """The main class representing logger metadata."""
@@ -238,6 +267,8 @@ class Metadata(MdBase):
     min_datetime: Optional[datetime] = None
     variants: Optional[Sequence[str]] = None
     sensors: Optional[dict[str,str]] = None
+    known_gaps :tuple[TimeRange, ...] = ()
+    skip_recs :tuple[TimeRange, ...] = ()
     def __post_init__(self):
         for tbl in self.tables.values():
             tbl.parent = self
@@ -259,6 +290,14 @@ class Metadata(MdBase):
                 self._valid_ident(sid)
                 if len(sn.strip())<1:
                     raise ValueError(f"Sensor id {sid!r} has an empty value")
+        for e in chain(self.known_gaps, self.skip_recs):
+            if not e.start.tzinfo and not self.tz:
+                raise ValueError(f"No TZ for time range start ({e!r})")
+            if e.end and not e.end.tzinfo and not self.tz:
+                raise ValueError(f"No TZ for time range end ({e!r})")
+            e.validate()
+        TimeRange.validate_set(self.known_gaps)
+        TimeRange.validate_set(self.skip_recs)
         for tn, tt in self.tables.items():
             self._valid_ident(tn)
             if tt.parent is not self:
@@ -392,6 +431,11 @@ def load_logger_metadata(file) -> Metadata:
         md['min_datetime'] = datetime.fromisoformat(js['min_datetime'])
         if md['min_datetime'].tzinfo is None and 'tz' in md:
             md['min_datetime'] = md['min_datetime'].replace( tzinfo = md['tz'] )
+    for k in ('known_gaps','skip_records'):
+        if k in js:
+            md['skip_recs' if k=='skip_records' else k] = tuple(
+                TimeRange( why=el['why'], start=datetime.fromisoformat(el['time']),
+                end=datetime.fromisoformat(el['end'] ) if 'end' in el else None) for el in js[k] )
     # handle tables and columns
     for table, tdata in js['tables'].items():
         tmd = {

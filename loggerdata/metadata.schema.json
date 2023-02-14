@@ -3,8 +3,9 @@
     "$id": "https://squid.igb-berlin.de/igbdatatools/logger_metadata_defs",
 	"$comment": "http://json-schema.org/understanding-json-schema/index.html",
 	"$defs": {
-		"ident":   { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{1,254}$" },
-		"colname": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{1,250}(\\(\\d{1,3}\\))?$" },
+		"ident":    { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{1,254}$" },
+		"colname":  { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{1,250}(\\(\\d{1,3}\\))?$" },
+		"datetime": { "type": "string", "pattern": "^\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d(Z|[-+]\\d\\d:\\d\\d)?$" },
 		"colobj": {
 			"type": "object",
 			"$comment": "property types should be the same as in 'columns'",
@@ -15,6 +16,20 @@
 			},
 			"required": [ "name" ],
 			"additionalProperties": false
+		},
+		"timerange": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"time": { "$ref": "#/$defs/datetime", "title": "Either a single timestamp or the starting time in the range (inclusive)" },
+					"end":  { "$ref": "#/$defs/datetime", "title": "The end time of the time range (inclusive; optional for single timestamps)" },
+					"why":  { "type": "string", "title": "A description of the reason for this time / range" }
+				},
+				"required": [ "time", "why" ],
+				"additionalProperties": false
+			},
+			"minItems": 1
 		}
 	},
 	"type": "object",
@@ -41,8 +56,7 @@
 		"min_datetime": {
 			"title": "minimum date/time for this logger",
 			"description": "e.g. when the logger was installed",
-			"type": "string",
-			"pattern": "^\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d(Z|[-+]\\d\\d:\\d\\d)?$"
+			"$ref": "#/$defs/datetime"
 		},
 		"variants": {
 			"type": "array",
@@ -56,6 +70,8 @@
 			"additionalProperties": { "type": "string" },
 			"$comment": "further validation in code"
 		},
+		"known_gaps": { "$ref": "#/$defs/timerange", "title": "A list of known gaps in the input data" },
+		"skip_records": { "$ref": "#/$defs/timerange", "title": "Records to ignore in the input data" },
 		"tables": {
 			"type": "object",
 			"propertyNames": { "$ref": "#/$defs/ident" },
