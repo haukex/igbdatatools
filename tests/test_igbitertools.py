@@ -26,6 +26,61 @@ from itertools import product
 
 class TestIgbItertools(unittest.TestCase):
 
+    def test_unzip_zip(self):
+        """Make sure that ``unzip``-then-``zip`` works as expected,
+        that is, it consumes the input table one row at a time.
+
+        It is documented that ``unzip`` uses ``tee`` internally, and this should
+        hopefully confirm that its internal storage doesn't grow too large."""
+        from more_itertools import unzip
+        totest = []
+        def gen():
+            tbl = (
+                ("One", "Abc", "Foo"),
+                ("Two", "Def", "Bar"),
+                ("Thr", "Ghi", "Quz"),
+            )
+            for row in tbl:
+                totest.append(f"gen {row!r}")
+                yield row
+        def trans(seq, start):
+            for i, x in enumerate(seq, start=start):
+                totest.append(f"trans {x}")
+                yield x.lower()+str(i)
+        for orow in zip( *( trans(col, ci*3) for ci, col in enumerate(unzip(gen())) ), strict=True ):
+            totest.append(f"got {orow!r}")
+        self.assertEqual([
+            "gen ('One', 'Abc', 'Foo')", 'trans One', 'trans Abc', 'trans Foo', "got ('one0', 'abc3', 'foo6')",
+            "gen ('Two', 'Def', 'Bar')", 'trans Two', 'trans Def', 'trans Bar', "got ('two1', 'def4', 'bar7')",
+            "gen ('Thr', 'Ghi', 'Quz')", 'trans Thr', 'trans Ghi', 'trans Quz', "got ('thr2', 'ghi5', 'quz8')",
+        ], totest)
+        # check that an unequal number of columns throws an error
+        tbl2 = ((0, "x", "y"), (1, "a"))
+        with self.assertRaises(ValueError):
+            tuple( zip( *( tuple(x) for x in unzip(tbl2) ), strict=True) )
+
+    def test_tee_zip(self):
+        """Make sure that the ``tee``-then-``zip`` pattern works as expected,
+        that is, that it really does consume the input one-at-a-time."""
+        from itertools import tee
+        totest = []
+        def gen():
+            for x in range(1,4):
+                totest.append(f"gen {x}")
+                yield x
+        def trans(seq):
+            for x in seq:
+                out = chr( x + ord('A') - 1 )
+                totest.append(f"trans {x}-{out}")
+                yield out
+        g1, g2 = tee(gen())
+        for i, o in zip(g1, trans(g2), strict=True):
+            totest.append(f"got {i}-{o}")
+        self.assertEqual( totest, [
+            'gen 1', 'trans 1-A', 'got 1-A',
+            'gen 2', 'trans 2-B', 'got 2-B',
+            'gen 3', 'trans 3-C', 'got 3-C'] )
+
     def test_gray_product(self):
         self.assertEqual( tuple( gray_product( ('a','b','c'), range(1,3) ) ),
             ( ("a",1), ("b",1), ("c",1), ("c",2), ("b",2), ("a",2) ) )
@@ -87,7 +142,7 @@ class TestIgbItertools(unittest.TestCase):
         with self.assertRaises(ValueError):
             set(no_duplicates( ("foo", "bar", "quz", "Foo"), key=str.lower ))
         with self.assertRaises(ValueError):
-            list(no_duplicates( [ ["foo","bar"], "quz", ["baz"], ["foo","bar"] ] ))
+            list(no_duplicates( [ ["foo","bar"], "quz", ["quz"], ["foo","bar"] ] ))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
