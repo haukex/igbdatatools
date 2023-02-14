@@ -22,6 +22,7 @@ along with this program. If not, see https://www.gnu.org/licenses/
 """
 from collections.abc import Sized, Iterator, Iterable, Callable
 from typing import TypeVar, Generic, Optional
+from itertools import tee
 
 def gray_product(*iterables):
     """Like :func:`itertools.product`, but return tuples in an order such that only one
@@ -88,6 +89,31 @@ class SizedCallbackIterator(Generic[_T], Sized, Iterator[_T]):
             self._count += 1
             return val
 
+def is_unique_everseen(iterable, *, key=None):
+    """For each element in the input iterable, return either ``True`` if this
+    element is unique, or ``False`` if it is not.
+
+    The implementation is very similar :func:`more_itertools.unique_everseen`
+    and is subject to the same performance considerations.
+    """
+    seen_set = set()
+    seen_list = []
+    use_key = key is not None
+    for element in iterable:
+        k = key(element) if use_key else element
+        try:
+            if k not in seen_set:
+                seen_set.add(k)
+                yield True
+            else:
+                yield False
+        except TypeError:
+            if k not in seen_list:
+                seen_list.append(k)
+                yield True
+            else:
+                yield False
+
 def no_duplicates(iterable, *, key=None, name="item"):
     """Raise a ``ValueError`` if there are any duplicate elements in the
     input iterable.
@@ -100,20 +126,11 @@ def no_duplicates(iterable, *, key=None, name="item"):
 
     :func:`more_itertools.duplicates_everseen` could also be used for this purpose,
     but this function returns the values of the input iterable.
-    The implementation is very similar to :func:`more_itertools.unique_everseen`.
+
+    The implementation is very similar :func:`more_itertools.unique_everseen`
+    and is subject to the same performance considerations.
     """
-    seenset = set()
-    seenlist = []
-    use_key = key is not None
-    for element in iterable:
-        k = key(element) if use_key else element
-        try:
-            if k in seenset:
-                raise ValueError(f"duplicate {name}: {element!r}")
-            seenset.add(k)
-            yield element
-        except TypeError:
-            if k in seenlist:
-                raise ValueError(f"duplicate {name}: {element!r}")
-            seenlist.append(k)
-            yield element
+    it1, it2 = tee(iterable)
+    for element, unique in zip(it1, is_unique_everseen(it2, key=key), strict=True):
+        if not unique: raise ValueError(f"duplicate {name}: {element!r}")
+        else: yield element

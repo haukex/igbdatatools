@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 import unittest
-from igbitertools import gray_product, no_duplicates, SizedCallbackIterator
+from igbitertools import gray_product, no_duplicates, SizedCallbackIterator, is_unique_everseen
 from itertools import product
 
 class TestIgbItertools(unittest.TestCase):
@@ -131,6 +131,28 @@ class TestIgbItertools(unittest.TestCase):
         self.assertEqual(len(it2), 6)
         self.assertEqual(list(it2), ['a', 'bb', 'ccc', 'dddd', 'eeeee', 'ffffff'])
         self.assertEqual(cbvals, [(0,'a'), (1,'bb'), (2,'ccc'), (3,'dddd'), (4,'eeeee'), (5,'ffffff')] )
+
+    def test_is_unique_everseen(self):
+        # taken from more-itertools docs
+        self.assertEqual( tuple(is_unique_everseen('mississippi')),
+                          (True,True,True,False,False,False,False,False,True,False,False) )
+        self.assertEqual( tuple(is_unique_everseen('AaaBbbCccAaa', key=str.lower)),
+                          (True,False,False,True,False,False,True,False,False,False,False,False) )
+        self.assertEqual( tuple(is_unique_everseen('AAAABBBCCDAABBB')),
+                          (True,False,False,False,True,False,False,True,False,True,False,False,False,False,False) )
+        self.assertEqual( tuple(is_unique_everseen('ABBcCAD', key=str.lower)),
+                          (True,True,False,True,False,False,True) )
+        # taken from test_no_duplicates below
+        self.assertEqual( tuple(is_unique_everseen( ( "foo", "bar", "quz", 123 ) )),
+                          (True,True,True,True) )
+        self.assertEqual( tuple(is_unique_everseen( [ "foo", ["bar", "quz"] ] )),
+                          (True,True) )
+        self.assertEqual( tuple(is_unique_everseen( ("foo", 123, "bar", "foo") )),
+                          (True,True,True,False) )
+        self.assertEqual( tuple(is_unique_everseen( ("foo", "bar", "quz", "Foo"), key=str.lower )),
+                          (True,True,True,False) )
+        self.assertEqual( tuple(is_unique_everseen([ ["foo","bar"], "quz", ["quz"], ["foo","bar"], "quz" ])),
+                          (True,True,True,False,False) )
 
     def test_no_duplicates(self):
         in1 = ( "foo", "bar", "quz", 123 )
