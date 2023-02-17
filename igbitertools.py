@@ -20,11 +20,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
-from collections.abc import Sized, Iterator, Iterable, Callable
-from typing import TypeVar, Generic, Optional
+from collections.abc import Sized, Iterator, Iterable, Callable, Generator
+from typing import TypeVar, Generic, Optional, Any
 from itertools import tee
 
-def gray_product(*iterables):
+def gray_product(*iterables :Iterable) -> Generator[tuple, None, None]:
     """Like :func:`itertools.product`, but return tuples in an order such that only one
     element in the generated tuple changes from one iteration to the next.
 
@@ -89,7 +89,8 @@ class SizedCallbackIterator(Generic[_T], Sized, Iterator[_T]):
             self._count += 1
             return val
 
-def is_unique_everseen(iterable, *, key=None):
+_V = TypeVar('_V', covariant=True)
+def is_unique_everseen(iterable :Iterable[_V], *, key :Callable[[_V], Any] = None) -> Generator[bool, None, None]:
     """For each element in the input iterable, return either ``True`` if this
     element is unique, or ``False`` if it is not.
 
@@ -114,7 +115,7 @@ def is_unique_everseen(iterable, *, key=None):
             else:
                 yield False
 
-def no_duplicates(iterable, *, key=None, name="item"):
+def no_duplicates(iterable :Iterable[_V], *, key :Callable[[_V], Any] = None, name :str="item") -> Generator[_V, None, None]:
     """Raise a ``ValueError`` if there are any duplicate elements in the
     input iterable.
 
