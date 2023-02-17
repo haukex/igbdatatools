@@ -121,6 +121,7 @@ def no_duplicates(iterable, *, key=None, name="item"):
     Remember that if you don't want to use this iterator's return values,
     but only use it for checking a list, you need to force it to execute
     by wrapping the call e.g. in a ``set()`` or ``list()``.
+    Alternatively, use ``not all(is_unique_everseen(iterable))``.
 
     The ``name`` argument is only to customize the error messages.
 

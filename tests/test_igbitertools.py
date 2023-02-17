@@ -153,6 +153,9 @@ class TestIgbItertools(unittest.TestCase):
                           (True,True,True,False) )
         self.assertEqual( tuple(is_unique_everseen([ ["foo","bar"], "quz", ["quz"], ["foo","bar"], "quz" ])),
                           (True,True,True,False,False) )
+        # alternative to no_duplicates if one doesn't need the return values:
+        self.assertFalse( not all(is_unique_everseen((1,2,3))) )
+        self.assertTrue( not all(is_unique_everseen((1,2,3,1))) )
 
     def test_no_duplicates(self):
         in1 = ( "foo", "bar", "quz", 123 )
