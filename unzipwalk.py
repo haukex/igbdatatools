@@ -50,6 +50,7 @@ def _procfile(fns :tuple[PurePath, ...], fh :typing.IO[bytes]|GzipFile) \
                 if ti.issym(): yield newname, None, FileType.SYMLINK
                 elif ti.isdir(): yield newname, None, FileType.DIR
                 elif ti.isfile():
+                    # Note apparently this uses a lot of memory: https://github.com/python/cpython/issues/102120
                     with tf.extractfile(ti) as fh2:
                         yield from _procfile(newname, fh2)
                 else: yield newname, None, FileType.OTHER  # for ti.type see e.g.: https://github.com/python/cpython/blob/v3.11.1/Lib/tarfile.py#L87
