@@ -125,10 +125,6 @@ def replacer(file :Filename, *, binary :bool=False, encoding=None, errors=None, 
     When the context manager is exited, it will replace the input file over the temporary file.
     Depending on the OS and file system, this ``os.replace`` may be an atomic operation.
     If an error occurs in the context manager, the temporary file is unlinked and the original file left unchanged.
-
-    If you supply a file object, then the file must be open for reading, must exist in the filesystem, and
-    the options ``binary``, ``encoding``, ``errors``, and ``newline`` only apply to the output handle.
-    Note that replacing over an open file does not work on Windows.
     """
     fname = Path(file).resolve(strict=True)
     if not fname.is_file(): raise ValueError(f"not a regular file: {fname}")
