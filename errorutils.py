@@ -94,16 +94,22 @@ def init_handlers() -> None:
 def javaishstacktrace(ex :BaseException) -> Generator[str, None, None]:
     """Generate a stack trace in the style of Java.
 
-    Compared to Java, the order of exceptions is reversed, so it reads more like a stack."""
+    Compared to Java, the order of exceptions is reversed, so it reads more like a stack.
+
+    ``AssertionError``s are treated specially in that the line of source code that caused them is printed.
+    """
     causes = [ex]
     while ex.__cause__:
         ex = ex.__cause__
         causes.append(ex)
     first = True
     for e in reversed(causes):
-        ss = extract_tb(e.__traceback__)
-        yield _ex_repr(e) if first else "which caused: " + _ex_repr(e)
-        for item in reversed(ss):
+        r = _ex_repr(e)
+        if isinstance(e, AssertionError):  # for "assert"s we'd like to see the source that caused it
+            lines = inspect.getinnerframes(e.__traceback__)[-1].code_context
+            r += f" [{ lines[0].strip() if len(lines)==1 else ''.join(lines) !r}]"
+        yield r if first else "which caused: " + r
+        for item in reversed( extract_tb(e.__traceback__) ):
             fn = Path(item.filename).resolve(strict=True)
             if fn.is_relative_to(_basepath): fn = fn.relative_to(_basepath)
             yield f"\tat {fn}:{item.lineno} in {item.name}"

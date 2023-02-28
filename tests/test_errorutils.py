@@ -96,6 +96,16 @@ class TestErrorUtils(unittest.TestCase):
                 f"\tat {self.mybasepath/'errorutils_test_funcs.py'}:8 in testfunc0",
                 f"\tat {self.mybasepath/'test_errorutils.py'}:{exline} in test_javaishstacktrace"),
                 tuple(errorutils.javaishstacktrace(ex)) )
+        # check our extension to AssertionErrors
+        self.assertTrue(__debug__)
+        try:
+            exline = inspect.stack()[0].lineno + 1
+            assert 1+1==3
+        except AssertionError as ex:
+            self.assertEqual(
+                ("AssertionError() ['assert 1+1==3']",
+                 f"\tat {self.mybasepath/'test_errorutils.py'}:{exline} in test_javaishstacktrace"),
+                tuple(errorutils.javaishstacktrace(ex)) )
 
     def test_customwarn(self):
         with redirect_stderr(io.StringIO()) as s:
