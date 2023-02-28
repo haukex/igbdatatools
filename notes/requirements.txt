@@ -45,6 +45,9 @@ tzdata
 # https://pyinstaller.org/
 pyinstaller
 
+# https://bidict.readthedocs.io/
+bidict
+
 # ##### APIs #####
 
 # https://pypi.org/project/keyring/
@@ -204,6 +207,9 @@ tifffile
 Pillow
 
 # ##### GIS #####
+
+# https://pyproj4.github.io/pyproj/stable/
+pyproj
 
 # https://pypi.org/project/PyGeodesy/
 # https://mrjean1.github.io/PyGeodesy/
