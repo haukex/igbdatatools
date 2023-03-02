@@ -41,6 +41,7 @@ class BaseType:
     """Abstract base class for data types implemented by this class."""
     pg_type :Optional[str] = None
     np_type :Any = None
+    #TODO: Sqlite data type? https://www.sqlite.org/datatype3.html => INTEGER, REAL (8-byte IEEE FP), TEXT (datetime is TEXT=ISO8601 or INTEGER=Unix)
     def check(self, value :str) -> bool:
         """Validate whether the given value is of this type."""
         raise NotImplementedError()  # pragma: no cover
