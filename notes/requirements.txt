@@ -99,7 +99,8 @@ crcmod
 
 # https://github.com/siara-cc/Unishox2
 # https://github.com/tweedge/unishox2-py3
-unishox2-py3
+# This is currently only for experimentation and not really needed on Windows, where it's a little tricky to build
+unishox2-py3; sys_platform != 'win32'
 
 # ##### Database & Serialization #####
 
@@ -170,7 +171,7 @@ zxcvbn
 # https://unicode-org.github.io/icu-docs/apidoc/released/icu4c/
 # sudo apt-get build-dep python3-icu
 # Windows: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyicu
-pyicu
+pyicu; sys_platform != 'win32'
 
 # ##### Terminal #####
 
