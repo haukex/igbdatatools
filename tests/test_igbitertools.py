@@ -21,7 +21,8 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 import unittest
-from igbitertools import gray_product, no_duplicates, SizedCallbackIterator, is_unique_everseen
+from igbitertools import no_duplicates, SizedCallbackIterator, is_unique_everseen
+from more_itertools import gray_product
 from itertools import product
 
 class TestIgbItertools(unittest.TestCase):
@@ -82,6 +83,7 @@ class TestIgbItertools(unittest.TestCase):
             'gen 3', 'trans 3-C', 'got 3-C'] )
 
     def test_gray_product(self):
+        # gray_product has been merged into more_itertools, but we'll keep this test here for now anyway
         self.assertEqual( tuple( gray_product( ('a','b','c'), range(1,3) ) ),
             ( ("a",1), ("b",1), ("c",1), ("c",2), ("b",2), ("a",2) ) )
 

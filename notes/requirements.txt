@@ -22,7 +22,7 @@ coverage
 deprecation
 
 # https://pypi.org/project/more-itertools/
-more-itertools
+more-itertools >= 9.1.0
 
 # https://pypi.org/project/ordered-enum/
 ordered_enum

@@ -1,9 +1,12 @@
 #!python3
 """A few useful iterators.
 
+Note the iterator ``gray_product`` that used to be in this module
+has been merged into ``more_itertools`` as of version 9.1.0.
+
 Author, Copyright, and License
 ------------------------------
-Copyright (c) 2022 Hauke Daempfling (haukex@zero-g.net)
+Copyright (c) 2022-2023 Hauke Daempfling (haukex@zero-g.net)
 at the Leibniz Institute of Freshwater Ecology and Inland Fisheries (IGB),
 Berlin, Germany, https://www.igb-berlin.de/
 
@@ -23,42 +26,6 @@ along with this program. If not, see https://www.gnu.org/licenses/
 from collections.abc import Sized, Iterator, Iterable, Callable, Generator
 from typing import TypeVar, Generic, Optional, Any
 from itertools import tee
-
-def gray_product(*iterables :Iterable) -> Generator[tuple, None, None]:
-    """Like :func:`itertools.product`, but return tuples in an order such that only one
-    element in the generated tuple changes from one iteration to the next.
-
-        >>> list(gray_product('AB','CD'))
-        [('A', 'C'), ('B', 'C'), ('B', 'D'), ('A', 'D')]
-
-    This is known under several names: "n-ary", "non-Boolean", "non-binary", or "mixed-radix" Gray code.
-
-    All input iterables are consumed by this function before the first output item can be generated.
-    Each iterable must have at least two items, or a ``ValueError`` is raised.
-
-    Reference: Knuth's "The Art of Computer Programming", Pre-Fascicle 2A,
-    "A Draft of Section 7.2.1.1: Generating all n-Tuples", Page 20,
-    Algorithm H, available at
-    https://www-cs-faculty.stanford.edu/~knuth/fasc2a.ps.gz
-    """
-    m = tuple(tuple(x) for x in iterables)
-    for x in m:
-        if len(x) < 2:
-            raise ValueError("each iterable must have two or more items")
-    a = [0] * len(m)
-    f = list(range(len(m) + 1))
-    o = [1] * len(m)
-    while True:
-        yield tuple(m[i][a[i]] for i in range(len(m)))
-        j = f[0]
-        f[0] = 0
-        if j == len(m):
-            break
-        a[j] = a[j] + o[j]
-        if a[j] == 0 or a[j] == len(m[j])-1:
-            o[j] = -o[j]
-            f[j] = f[j+1]
-            f[j+1] = j+1
 
 _T = TypeVar('_T', covariant=True)
 class SizedCallbackIterator(Generic[_T], Sized, Iterator[_T]):

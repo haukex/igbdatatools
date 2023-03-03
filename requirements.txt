@@ -1,6 +1,6 @@
 # python3 -m pip install --upgrade pip wheel
 # pip3 install --upgrade --upgrade-strategy=eager -r requirements.txt
-more-itertools
+more-itertools >= 9.1.0
 Unidecode
 regex
 pyicu  # sudo apt-get build-dep python3-icu; Windows: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyicu
