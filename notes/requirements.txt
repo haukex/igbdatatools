@@ -82,8 +82,12 @@ jupyterlab >=3
 ipywidgets >= 7.6
 jupyter-dash
 # see also: https://plotly.com/python/pandas-backend/
-# required for plotly image export
-kaleido
+
+# kaleido for plotly image export
+kaleido; sys_platform != 'win32'
+# https://github.com/plotly/Kaleido/issues/80
+# https://github.com/plotly/Kaleido/issues/134
+kaleido==0.1.0.post1; sys_platform == 'win32'
 
 # https://scipy.org/
 SciPy
