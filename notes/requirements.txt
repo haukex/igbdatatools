@@ -82,6 +82,8 @@ jupyterlab >=3
 ipywidgets >= 7.6
 jupyter-dash
 # see also: https://plotly.com/python/pandas-backend/
+# required for plotly image export
+kaleido
 
 # https://scipy.org/
 SciPy
