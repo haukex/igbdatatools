@@ -21,13 +21,14 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 import unittest
+from unittest.mock import patch
 import sys
 import os
 import stat
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from testutils import MyNamedTempFile
-from fileutils import to_Paths, autoglob, Pushd, filetypestr, is_windows_filename_bad, replacer
+from fileutils import to_Paths, autoglob, Pushd, filetypestr, is_windows_filename_bad, replacer, replace_symlink, Filename
 
 class TestFileUtils(unittest.TestCase):
 
@@ -172,6 +173,57 @@ class TestFileUtils(unittest.TestCase):
                 self.assertEqual( stat.S_IMODE(st.st_mode), 0o741 )
         else:   # pragma: no cover
             print(f"Skipping chmod test", file=sys.stderr)
+
+    def test_replace_symlink(self):
+        if os.name == 'posix':
+            with TemporaryDirectory() as td:
+                tp = Path(td)
+                fx = tp/'x.txt'
+                fy = tp/'y.txt'
+                with fx.open('w') as fh: fh.write("Hello, World\n")
+
+                def assert_state(linktarg :str, xtra :list[Path]=None):
+                    if not xtra: xtra = []
+                    self.assertEqual( sorted(tp.iterdir()), sorted([fx,fy]+xtra) )
+                    self.assertTrue( fx.is_file() )
+                    self.assertTrue( fy.is_symlink() )
+                    self.assertEqual( os.readlink(fy), linktarg )
+
+                self.assertEqual( list(tp.iterdir()), [fx] )
+                with self.assertRaises(FileNotFoundError):
+                    replace_symlink('x.txt', fy)
+                self.assertEqual( list(tp.iterdir()), [fx] )
+
+                replace_symlink('x.txt', fy, missing_ok=True)  # create
+                assert_state('x.txt')
+                replace_symlink('x.txt', fy)  # replace
+                assert_state('x.txt')
+                replace_symlink(fx, fy)  # replace (slightly different target)
+                assert_state(str(fx))
+
+                # test naming collision
+                mockf = tp/'.y.txt_1'
+                mockf.touch()
+                mockcnt = 0
+                def mocked_uuid4():
+                    nonlocal mockcnt
+                    mockcnt += 1
+                    return mockcnt  # this is ok because we know it's called as str(uuid.uuid4())
+                with patch('fileutils.uuid.uuid4', new_callable=lambda:mocked_uuid4):
+                    replace_symlink(fx, fy)  # abs
+                assert_state(str(fx), [mockf])
+                mockf.unlink()
+
+                # force an error on os.replace
+                fz = tp/'zzz'
+                fz.mkdir()
+                with self.assertRaises(IsADirectoryError):
+                    replace_symlink(fx, fz)
+                assert_state(str(fx), [fz])
+
+        else:  # pragma: no cover
+            with self.assertRaises(NotImplementedError):
+                replace_symlink('/tmp/foo', '/tmp/bar')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -23,6 +23,7 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import os
 import stat
 import sys
+import uuid
 from pathlib import Path
 from contextlib import contextmanager
 from functools import singledispatch
@@ -123,8 +124,12 @@ def replacer(file :Filename, *, binary :bool=False, encoding=None, errors=None, 
     The context manager gives you two file handles: the input file, and the output file, the latter
     being the temporary file. You can then read from the input file and write to the output file.
     When the context manager is exited, it will replace the input file over the temporary file.
-    Depending on the OS and file system, this ``os.replace`` may be an atomic operation.
     If an error occurs in the context manager, the temporary file is unlinked and the original file left unchanged.
+
+    Depending on the OS and file system, the ``os.replace`` used here *may* be an atomic operation.
+    However, this function doesn't provide protection against multiple writers and is therefore
+    intended for files with a single writer and multiple readers.
+    Multiple writers will need to be coordinated with external locking mechanisms.
     """
     fname = Path(file).resolve(strict=True)
     if not fname.is_file(): raise ValueError(f"not a regular file: {fname}")
@@ -142,3 +147,33 @@ def replacer(file :Filename, *, binary :bool=False, encoding=None, errors=None, 
     try: os.chmod(tf.name, origmode)
     except NotImplementedError: pass  # pragma: no cover
     os.replace(tf.name, fname)
+
+def replace_symlink(src :Filename, dst :Filename, missing_ok :bool=False):
+    """Attempt to atomically replace (or create) a symbolic link pointing to ``src`` named ``dst``.
+
+    Depending on the OS and file system, the ``os.replace`` used here *may* be an atomic operation.
+    However, the surrounding operations (e.g. checking if ``dst`` exists etc.) present a small
+    chance for race conditions, so this function is primarily suited for situations with a single
+    writer and multiple readers.
+    Multiple writers will need to be coordinated with external locking mechanisms.
+    """
+    if os.name != 'posix':  # pragma: no cover
+        raise NotImplementedError("only available on POSIX systems")
+    dst = Path(dst)  # DON'T Path.resolve() because that resolves symlinks
+    try: dst.lstat()  # Path.exists() resolves symlinks
+    except FileNotFoundError:
+        if missing_ok:
+            os.symlink(src, dst)
+            return
+        else: raise
+    while True:
+        tf = dst.parent / ( "."+dst.name+"_"+str(uuid.uuid4()) )
+        try:
+            os.symlink(src, tf)  # "Create a symbolic link pointing to src named dst."
+            break  # this name was unused (highly likely)
+        except FileExistsError: pass  # try again
+    try:
+        os.replace(tf, dst)
+    except BaseException:
+        os.unlink(tf)
+        raise
