@@ -54,11 +54,11 @@ class TestDirIteration(unittest.TestCase):
         cls.tempd_obj = TemporaryDirectory()
         cls.td = Path(cls.tempd_obj.name)
         (cls.td/'foo').mkdir()
-        with (cls.td/'bar.txt').open('w') as fh: fh.write("Hello\n")
-        with (cls.td/'.quz.txt').open('w') as fh: fh.write("World\n")
-        with (cls.td/'foo'/'baz.txt').open('w') as fh: fh.write("CoOl\n")
+        with (cls.td/'bar.txt').open('w', encoding='ASCII') as fh: fh.write("Hello\n")
+        with (cls.td/'.quz.txt').open('w', encoding='ASCII') as fh: fh.write("World\n")
+        with (cls.td/'foo'/'baz.txt').open('w', encoding='ASCII') as fh: fh.write("CoOl\n")
         (cls.td/'one'/'two'/'three').mkdir(parents=True)
-        with (cls.td/'one'/'two'/'three'/'four.txt').open('w') as fh: fh.write("Hi there\n")
+        with (cls.td/'one'/'two'/'three'/'four.txt').open('w', encoding='ASCII') as fh: fh.write("Hi there\n")
         cls.expect = [
             ( str(cls.td/'foo'), FileType.DIR ),
             ( str(cls.td/'bar.txt'), FileType.FILE ),

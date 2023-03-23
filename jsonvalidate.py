@@ -53,7 +53,7 @@ def load_json(file :Filename|io.IOBase|typing.IO|bytes|bytearray):
     raise TypeError(f"file must be a filename, file object, or bytes, not {repr(file)}")
 @load_json.register
 def _(file :Filename):
-    with open(file) as fh: return json.load(fh)
+    with open(file, 'rb') as fh: return json.load(fh)
 @load_json.register
 def _(file :io.IOBase|typing.IO):
     return json.load(file)

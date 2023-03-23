@@ -89,9 +89,9 @@ class TestLoggerDataImporter(unittest.TestCase):
     def test_decide_filetype(self):
         with TemporaryDirectory() as td:
             td = Path(td)
-            with (td/'test.csv').open('w') as fh: fh.write('"a","b"\n')
-            with (td/'test.txt').open('w') as fh: fh.write('Hello, World\n')
-            with (td/'test.dat').open('w') as fh: fh.write('dummy')
+            with (td/'test.csv').open('w', encoding='ASCII') as fh: fh.write('"a","b"\n')
+            with (td/'test.txt').open('w', encoding='ASCII') as fh: fh.write('Hello, World\n')
+            with (td/'test.dat').open('w', encoding='ASCII') as fh: fh.write('dummy')
             with self.assertRaises(NotImplementedError):
                 list( read_records(source=simple_file_source(td/'test.csv'), metadatas=self.metad) )
             with self.assertWarns(UserWarning):

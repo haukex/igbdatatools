@@ -145,7 +145,7 @@ class HashedFile(NamedTuple):
 def hashes_to_file(file :Filename, hashes :Iterable[HashedFile]) -> int:
     """Write a list of ``HashedFile``s to a text file."""
     count = 0
-    with open(file, 'w') as fh:
+    with open(file, 'w', encoding='UTF-8', newline="\n") as fh:
         for h in hashes:
             print(h.to_line(), file=fh)
             count += 1
@@ -153,7 +153,7 @@ def hashes_to_file(file :Filename, hashes :Iterable[HashedFile]) -> int:
 
 def hashes_from_file(file :Filename) -> Generator[HashedFile, None, None]:
     """Read a list of ``HashedFile``s from a text file."""
-    with open(file) as fh:
+    with open(file, encoding='UTF-8') as fh:
         for line in fh:
             yield HashedFile.from_line(line)
 

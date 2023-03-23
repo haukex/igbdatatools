@@ -156,7 +156,7 @@ class TestHashedFile(unittest.TestCase):
             cnt = hashes_to_file(tf.name, hsh1)
             self.assertEqual(cnt, 4)
             # read the lines back out and check them
-            with open(tf.name) as fh:
+            with open(tf.name, encoding='UTF-8') as fh:
                 lines = [ ln.rstrip("\r\n") for ln in fh ]
             self.assertEqual( sorted(self.sumfile256lines), sorted(lines) )
             # read the file back in

@@ -89,7 +89,7 @@ class TestFileUtils(unittest.TestCase):
     def test_filetypestr(self):
         with TemporaryDirectory() as td:
             tp = Path(td)
-            with open(tp/'foo', 'w') as fh: print("foo", file=fh)
+            with open(tp/'foo', 'w', encoding='ASCII') as fh: print("foo", file=fh)
             (tp/'bar').mkdir()
             self.assertEqual( 'regular file', filetypestr( os.lstat(tp/'foo') ) )
             self.assertEqual( 'directory', filetypestr( os.lstat(tp/'bar') ) )
@@ -120,16 +120,16 @@ class TestFileUtils(unittest.TestCase):
         self.assertTrue( is_windows_filename_bad("Hello.txt.") )
 
     def test_replacer(self):
-        with MyNamedTempFile('w') as tf:
+        with MyNamedTempFile('w', encoding='UTF-8') as tf:
             # Basic Test
             print("Hello\nWorld!", file=tf)
             tf.close()
-            with replacer(tf.name) as (ifh, ofh):
+            with replacer(tf.name, encoding='UTF-8') as (ifh, ofh):
                 for line in ifh:
                     line = line.replace('o', 'u')
                     print(line, end='', file=ofh)
             self.assertFalse( os.path.exists(ofh.name) )
-            with open(tf.name) as fh:
+            with open(tf.name, encoding='UTF-8') as fh:
                 self.assertEqual(fh.read(), "Hellu\nWurld!\n")
 
             # Binary
@@ -145,7 +145,7 @@ class TestFileUtils(unittest.TestCase):
 
             # Failure inside of context
             with self.assertRaises(ProcessLookupError):
-                with replacer(tf.name) as (ifh, ofh):
+                with replacer(tf.name, encoding='UTF-8') as (ifh, ofh):
                     ofh.write("oops")
                     raise ProcessLookupError("blam!")
             self.assertFalse( os.path.exists(ofh.name) )
@@ -161,12 +161,12 @@ class TestFileUtils(unittest.TestCase):
 
         # Permissions test
         if not sys.platform.startswith('win32'):
-            with MyNamedTempFile('w') as tf:
+            with MyNamedTempFile('w', encoding='UTF-8') as tf:
                 print("Hello\nWorld!", file=tf)
                 tf.close()
                 orig_ino = os.stat(tf.name).st_ino
                 os.chmod(tf.name, 0o741)
-                with replacer(tf.name) as (_, ofh): pass
+                with replacer(tf.name, encoding='UTF-8') as (_, ofh): pass
                 self.assertFalse( os.path.exists(ofh.name) )
                 st = os.stat(tf.name)
                 self.assertNotEqual( st.st_ino, orig_ino )
@@ -180,7 +180,7 @@ class TestFileUtils(unittest.TestCase):
                 tp = Path(td)
                 fx = tp/'x.txt'
                 fy = tp/'y.txt'
-                with fx.open('w') as fh: fh.write("Hello, World\n")
+                with fx.open('w', encoding='ASCII') as fh: fh.write("Hello, World\n")
 
                 def assert_state(linktarg :str, xtra :list[Path]=None):
                     if not xtra: xtra = []
