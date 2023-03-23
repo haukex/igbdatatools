@@ -55,7 +55,10 @@ def _showwarning(message, category, filename, lineno, file=None, line=None):
         file = sys.stderr
         if file is None: return
     if issubclass(category, UserWarning):
-        fn = Path(filename).resolve(strict=True)
+        try:
+            fn = Path(filename).resolve(strict=True)
+        except OSError:  # pragma: no cover
+            fn = Path(filename)
         if fn.is_relative_to(_basepath): fn = fn.relative_to(_basepath)
         text = f"{_extype_fullname(category)}: {message} at {fn}:{lineno}\n"
     else:
@@ -112,10 +115,7 @@ def javaishstacktrace(ex :BaseException) -> Generator[str, None, None]:
         for item in reversed( extract_tb(e.__traceback__) ):
             try:
                 fn = Path(item.filename).resolve(strict=True)
-            except OSError:
-                # work around .resolve throwing an error
-                #TODO: This may apply to other places in this code
-                # also this needs tests
+            except OSError:  # pragma: no cover
                 fn = Path(item.filename)
             if fn.is_relative_to(_basepath): fn = fn.relative_to(_basepath)
             yield f"\tat {fn}:{item.lineno} in {item.name}"
