@@ -110,7 +110,13 @@ def javaishstacktrace(ex :BaseException) -> Generator[str, None, None]:
             r += f" [{ lines[0].strip() if len(lines)==1 else ''.join(lines) !r}]"
         yield r if first else "which caused: " + r
         for item in reversed( extract_tb(e.__traceback__) ):
-            fn = Path(item.filename).resolve(strict=True)
+            try:
+                fn = Path(item.filename).resolve(strict=True)
+            except OSError:
+                # work around .resolve throwing an error
+                #TODO: This may apply to other places in this code
+                # also this needs tests
+                fn = Path(item.filename)
             if fn.is_relative_to(_basepath): fn = fn.relative_to(_basepath)
             yield f"\tat {fn}:{item.lineno} in {item.name}"
         first = False

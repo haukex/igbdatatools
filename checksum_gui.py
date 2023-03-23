@@ -279,6 +279,7 @@ class GenHashesThread(MyWorkThread):
         hashes = sort_hashedfiles(hashes, self.sorting)
         # actually do the hashing
         count = 0
+        #TODO: all opens need explicit encoding= (for Windows)
         with open(self.filename, "w", newline='\n') as fh:
             for hf in hashes:
                 print(hf.to_line(), file=fh, flush=self.sorting==SortingType.NO_SORT)
