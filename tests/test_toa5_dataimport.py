@@ -24,7 +24,7 @@ import unittest
 from pathlib import Path
 from contextlib import suppress
 from more_itertools import unique_justseen, peekable
-from testutils import tempcopy
+from igbpyutils.test import tempcopy
 from loggerdata.metadata import load_logger_metadata, ColumnHeader
 from loggerdata.toa5 import EnvironmentLine
 from loggerdata.toa5.dataimport import read_toa5_records, header_match

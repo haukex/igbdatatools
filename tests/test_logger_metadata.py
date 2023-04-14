@@ -27,7 +27,7 @@ from loggerdata.metadata import load_logger_metadata, MdBaseCol, MdColumn, MdMap
 from zoneinfo import ZoneInfo
 from datetime import datetime, timedelta, timezone
 from datatypes import TimestampNoTz, NonNegInt, Num
-from testutils import tempcopy
+from igbpyutils.test import tempcopy
 
 _TestLogger_md = Metadata(
     logger_name = "TestLogger",

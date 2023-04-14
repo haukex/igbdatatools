@@ -26,10 +26,9 @@ from collections.abc import Generator
 from pathlib import Path, PurePath
 from unzipwalk import unzipwalk, FileType
 import uniutils
-import fileutils
-from fileutils import AnyPaths, filetypestr, is_windows_filename_bad
+from igbpyutils.file import AnyPaths, filetypestr, is_windows_filename_bad, invalidchars
 
-_base_allowed_chars = frozenset( set(uniutils.common_ascii) - fileutils.invalidchars )
+_base_allowed_chars = frozenset( set(uniutils.common_ascii) - invalidchars )
 
 def list_problems(paths :AnyPaths, *, ignore_compressed :bool = False, ignore_symlinks :bool = False,
         allowed_chars :set[str] = None ) -> Generator[tuple[tuple[PurePath, ...], str], None, None]:
@@ -88,7 +87,7 @@ def list_problems(paths :AnyPaths, *, ignore_compressed :bool = False, ignore_sy
 if __name__ == '__main__':  # pragma: no cover
     import sys
     import argparse
-    from fileutils import autoglob
+    from igbpyutils.file import autoglob
     parser = argparse.ArgumentParser(description='Check for Bad Filenames/types')
     parser.add_argument('-L', '--ignore-symlinks', help="ignore symlinks", action="store_true")
     parser.add_argument('-Z', '--ignore-compressed', help="ignore compressed files", action="store_true")

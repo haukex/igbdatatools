@@ -30,7 +30,7 @@ from zipfile import ZipFile
 import typing
 from typing import Optional
 from collections.abc import Generator, Sequence
-from fileutils import AnyPaths, to_Paths
+from igbpyutils.file import AnyPaths, to_Paths
 
 class FileType(Enum):
     FILE = 0

@@ -32,7 +32,7 @@ from zoneinfo import ZoneInfo
 from typing import Self, NamedTuple, Optional
 from collections.abc import Sequence
 from more_itertools import unique_everseen
-from igbitertools import no_duplicates
+from igbpyutils.iter import no_duplicates
 from jsonvalidate import load_json_schema, validate_json, freeze_json
 import datatypes
 
@@ -511,7 +511,7 @@ if __name__ == '__main__':  # pragma: no cover
     import sys
     import argparse
     from pprint import pprint
-    from fileutils import autoglob
+    from igbpyutils.file import autoglob
     parser = argparse.ArgumentParser(description='Logger Metadata Handler')
     parser.add_argument('-d', '--dump', help="dump loaded metadata", action="store_true")
     parser.add_argument('jsons', help="", nargs="+")

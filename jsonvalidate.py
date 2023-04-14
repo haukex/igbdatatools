@@ -23,7 +23,7 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import io
 import json
 import typing
-from fileutils import Filename
+from igbpyutils.file import Filename
 from types import MappingProxyType, NoneType
 from pprint import pprint
 import jschon

@@ -22,7 +22,7 @@ along with this program. If not, see https://www.gnu.org/licenses/
 """
 import io
 import typing
-from fileutils import AnyPaths, to_Paths
+from igbpyutils.file import AnyPaths, to_Paths
 from more_itertools import peekable
 from loggerdata.metadata import Metadata, MdTable, MdCollection
 from loggerdata.importdefs import DataFileType, NoTableMatch, Record

@@ -29,7 +29,7 @@ from tempfile import TemporaryDirectory
 from checksum import check_hashes, match_hashes, ResultCode, list_hashable_files
 from hashedfile import HashedFile
 import hashlib
-from fileutils import Pushd
+from igbpyutils.file import Pushd
 
 class TestChecksum(unittest.TestCase):
 

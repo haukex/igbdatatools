@@ -24,7 +24,7 @@ import csv
 import dataclasses
 from typing import Optional
 from collections.abc import Iterable, Generator, Sequence
-from fileutils import Filename
+from igbpyutils.file import Filename
 from loggerdata import toa5
 from loggerdata.metadata import Metadata, MdTable, MdCollection, LoggerType, ColumnHeader
 from loggerdata.importdefs import NoTableMatch, NoVariantMatch, NoMetadataMatch, Toa5Record, RecordError, DataFileType

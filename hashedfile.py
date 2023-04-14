@@ -27,7 +27,7 @@ import operator
 from enum import Enum
 from typing import Self, NamedTuple, Optional
 from collections.abc import Iterable, Generator
-from fileutils import Filename
+from igbpyutils.file import Filename
 
 def _algo_from_hashsize(hsh :bytes):
     match len(hsh):

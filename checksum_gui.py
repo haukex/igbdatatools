@@ -30,7 +30,7 @@ import tkinter as tk  # https://tkdocs.com/
 from tkinter import ttk, filedialog, messagebox
 from errorutils import javaishstacktrace
 from more_itertools import partition
-from igbitertools import SizedCallbackIterator
+from igbpyutils.iter import SizedCallbackIterator
 from hashedfile import hashes_from_file, sort_hashedfiles, SortingType
 from checksum import list_hashable_files, match_hashes, check_hashes, ResultCode, FileResult
 from typing import Union

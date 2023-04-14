@@ -26,7 +26,7 @@ from typing import Optional, Self
 from more_itertools import first
 from dataclasses import dataclass
 from functools import cached_property
-from fileutils import Filename
+from igbpyutils.file import Filename
 from loggerdata import toa5
 from loggerdata.metadata import MdTable
 from datatypes import TimestampNoTz, PythonDataTypes, NumPyDataTypes

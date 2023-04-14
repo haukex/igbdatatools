@@ -26,7 +26,7 @@ import hashlib
 from pathlib import Path, PurePath
 from tempfile import TemporaryDirectory
 from hashedfile import HashedFile, hashes_to_file, hashes_from_file, DEFAULT_HASH, sort_hashedfiles, SortingType
-from testutils import MyNamedTempFile
+from igbpyutils.file import NamedTempFileDeleteLater
 
 class TestHashedFile(unittest.TestCase):
 
@@ -150,7 +150,7 @@ class TestHashedFile(unittest.TestCase):
     def test_to_from_file(self):
         hsh1 = [ HashedFile.from_file(f, algo=hashlib.sha256).setfn( f.relative_to(self.temppath) )
                  for f in self.temppath.rglob('*') if f.is_file() ]
-        with MyNamedTempFile() as tf:
+        with NamedTempFileDeleteLater() as tf:
             tf.close()
             # write the hashes to the file
             cnt = hashes_to_file(tf.name, hsh1)

@@ -23,7 +23,7 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import csv
 import warnings
 from typing import NamedTuple
-from igbitertools import no_duplicates
+from igbpyutils.iter import no_duplicates
 from loggerdata.metadata import ColumnHeader, MdTable
 from collections.abc import Iterator, Sequence, Iterable, Generator
 

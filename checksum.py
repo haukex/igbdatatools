@@ -28,7 +28,7 @@ from typing import NamedTuple, Self, Optional
 from ordered_enum import OrderedEnum
 from more_itertools import unique_everseen, partition
 from hashedfile import HashedFile, hashes_from_file, hashes_to_file, DEFAULT_HASH
-from fileutils import to_Paths, AnyPaths, filetypestr
+from igbpyutils.file import to_Paths, AnyPaths, filetypestr
 
 class ResultCode(OrderedEnum):  # this needs to be ordered so that FileResults can be sorted
     """A status code for ``FileResult``s."""
@@ -216,7 +216,7 @@ def match_hashes(*, sumsrc :Iterable[HashedFile], paths :AnyPaths, filesrc :Iter
 if __name__ == '__main__':  # pragma: no cover
     import sys
     import argparse
-    from fileutils import autoglob
+    from igbpyutils.file import autoglob
     from hashedfile import SortingType, sort_hashedfiles
 
     parser = argparse.ArgumentParser(description='File Hashing Tool')
@@ -237,7 +237,7 @@ if __name__ == '__main__':  # pragma: no cover
 
     if not args.quiet:
         from tqdm import tqdm
-        from igbitertools import SizedCallbackIterator
+        from igbpyutils.iter import SizedCallbackIterator
 
     # list files
     allpaths = tuple( autoglob(args.paths) if args.paths else (Path(),) )
