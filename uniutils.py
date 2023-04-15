@@ -118,9 +118,9 @@ if __name__ == '__main__':  # pragma: no cover
     import sys
     import os
     import argparse
-    import errorutils
+    import igbpyutils.error
     from unidecode import unidecode
-    errorutils.init_handlers()
+    igbpyutils.error.init_handlers()
     parser = argparse.ArgumentParser(description='Unicode Utilities')
     parser.add_argument('-a','--allencodings',help="Report all matching encodings, not just the first",action="store_true")
     parser.add_argument('-e','--enc',dest='encodings',metavar="ENCODING",

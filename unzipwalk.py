@@ -29,7 +29,7 @@ from tarfile import TarFile
 from zipfile import ZipFile
 import typing
 from typing import Optional
-from collections.abc import Generator, Sequence
+from collections.abc import Generator
 from igbpyutils.file import AnyPaths, to_Paths
 
 class FileType(Enum):
@@ -125,8 +125,8 @@ def unzipwalk(paths :AnyPaths, *, onlyfiles :bool=True) \
 if __name__ == '__main__':  # pragma: no cover
     import sys
     import argparse
-    import errorutils
-    errorutils.init_handlers()
+    import igbpyutils.error
+    igbpyutils.error.init_handlers()
     parser = argparse.ArgumentParser(description='unzipwalk')
     parser.add_argument('-a','--allfiles',help="also list dirs, symlinks, etc.",action="store_true")
     parser.add_argument('-d','--dump',help="also dump file contents",action="store_true")

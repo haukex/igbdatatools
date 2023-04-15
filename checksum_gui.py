@@ -28,7 +28,7 @@ from enum import Enum
 from typing import NamedTuple
 import tkinter as tk  # https://tkdocs.com/
 from tkinter import ttk, filedialog, messagebox
-from errorutils import javaishstacktrace
+from igbpyutils.error import javaishstacktrace
 from more_itertools import partition
 from igbpyutils.iter import SizedCallbackIterator
 from hashedfile import hashes_from_file, sort_hashedfiles, SortingType
