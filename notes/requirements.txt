@@ -226,7 +226,7 @@ PyGeodesy
 
 # https://pypi.org/project/sleep-until/
 # https://github.com/haukex/sleep_until
-sleep_until; sys_platform == 'linux'
+sleep_until
 
 # https://pypi.org/project/igbpyutils/
 # https://github.com/haukex/igbpyutils
