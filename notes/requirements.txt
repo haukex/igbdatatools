@@ -140,6 +140,8 @@ docker
 beautifulsoup4
 # https://requests.readthedocs.io/
 requests
+# https://scrapy.org/
+scrapy
 
 # SSH client based on http://paramiko.org/
 # https://www.fabfile.org/
