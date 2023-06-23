@@ -30,14 +30,69 @@ from enum import Enum
 from datetime import datetime, timedelta, timezone, tzinfo
 from zoneinfo import ZoneInfo
 from typing import Self, NamedTuple, Optional
-from collections.abc import Sequence
+from collections.abc import Sequence, Callable
 from more_itertools import unique_everseen
 from igbpyutils.iter import no_duplicates
 from jsonvalidate import load_json_schema, validate_json, freeze_json
 import datatypes
+from functools import cache
+from dateutil.relativedelta import relativedelta
 
 short_units :dict[str,str] = json.loads(pkgutil.get_data('loggerdata', 'short_units.json').decode('UTF-8'))
 del short_units['$comment']
+
+class Interval(Enum):
+    UNDEF = 0
+    MIN15 = 1
+    MIN30 = 2
+    HOUR1 = 3
+    DAY1 = 4
+    WEEK1 = 5
+    MONTH1 = 6
+    @property
+    @cache
+    def delta(self) -> timedelta|relativedelta:
+        match self:
+            case Interval.MIN15:  return timedelta(minutes=15)
+            case Interval.MIN30:  return timedelta(minutes=30)
+            case Interval.HOUR1:  return timedelta(hours=1)
+            case Interval.DAY1:   return timedelta(days=1)
+            case Interval.WEEK1:  return timedelta(weeks=1)
+            case Interval.MONTH1: return relativedelta(months=1)
+            case _: raise ValueError(f"unhandled interval {self!r}")
+    @property
+    @cache
+    def floor(self) -> Callable[[datetime], datetime]:
+        match self:
+            case Interval.MIN15:
+                def timefloor(stamp :datetime) -> datetime:
+                    if stamp.minute >= 45: cmin = 45
+                    elif stamp.minute >= 30: cmin = 30
+                    elif stamp.minute >= 15: cmin = 15
+                    else: cmin = 0
+                    return stamp.replace(minute=cmin, second=0, microsecond=0)
+            case Interval.MIN30:
+                def timefloor(stamp :datetime) -> datetime:
+                    if stamp.minute>=30: cmin = 30
+                    else: cmin = 0
+                    return stamp.replace(minute=cmin, second=0, microsecond=0)
+            case Interval.HOUR1:
+                def timefloor(stamp :datetime) -> datetime:
+                    return stamp.replace(minute=0, second=0, microsecond=0)
+            case Interval.DAY1:
+                def timefloor(stamp :datetime) -> datetime:
+                    return stamp.replace(hour=0, minute=0, second=0, microsecond=0)
+            case Interval.WEEK1:
+                def timefloor(stamp :datetime) -> datetime:
+                    isoyear, isoweek, _isoday = stamp.isocalendar()
+                    newdate = datetime.fromisocalendar(isoyear, isoweek, 1)
+                    return stamp.replace(year=newdate.year, month=newdate.month, day=newdate.day,
+                                         hour=0, minute=0, second=0, microsecond=0)
+            case Interval.MONTH1:
+                def timefloor(stamp :datetime) -> datetime:
+                    return stamp.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            case _: raise ValueError(f"unhandled interval {self!r}")
+        return timefloor
 
 class LoggerOrigDataType(Enum):
     CB_FP2 = 0

@@ -22,8 +22,9 @@ along with this program. If not, see https://www.gnu.org/licenses/
 """
 import unittest
 from pathlib import Path
-from loggerdata.metadata import load_logger_metadata, MdBaseCol, MdColumn, MdMapEntry, MdMapping, MappingType, \
+from loggerdata.metadata import Interval, load_logger_metadata, MdBaseCol, MdColumn, MdMapEntry, MdMapping, MappingType, \
     MdTable, Toa5EnvMatch, Metadata, LoggerType, ColumnHeader, MdCollection, LoggerOrigDataType, TimeRange
+from dateutil.relativedelta import relativedelta
 from zoneinfo import ZoneInfo
 from datetime import datetime, timedelta, timezone
 from datatypes import TimestampNoTz, NonNegInt, Num
@@ -165,6 +166,47 @@ _DummyLogger_md = Metadata(
 ).validate()
 
 class TestLoggerMetadata(unittest.TestCase):
+
+    def test_interval_as_timedelta(self):
+        with self.assertRaises(ValueError): _ = Interval.UNDEF.delta
+        self.assertEqual(Interval.MIN15.delta, timedelta(minutes=15))
+        self.assertEqual(Interval.MIN30.delta, timedelta(minutes=30))
+        self.assertEqual(Interval.HOUR1.delta, timedelta(hours=1))
+        self.assertEqual(Interval.DAY1.delta, timedelta(days=1))
+        self.assertEqual(Interval.WEEK1.delta, timedelta(weeks=1))
+        self.assertEqual(Interval.MONTH1.delta, relativedelta(months=1))
+
+    def test_timefloor(self):
+        with self.assertRaises(ValueError): _ = Interval.UNDEF.floor
+        self.assertEqual( Interval.MIN15.floor(datetime(2023,6,23,10,59,59)), datetime(2023,6,23,10,45,0,0) )
+        tf_15m = Interval.MIN15.floor
+        self.assertEqual( tf_15m(datetime(2023,3,10,10,55,23,4523)), datetime(2023, 3,10,10,45,0,0) )
+        self.assertEqual( tf_15m(datetime(2023,3,10,10,44,59,2231)), datetime(2023, 3,10,10,30,0,0) )
+        self.assertEqual( tf_15m(datetime(2023,3,10,10,15, 0,   1)), datetime(2023, 3,10,10,15,0,0) )
+        self.assertEqual( tf_15m(datetime(2023,3,10,10, 0, 0,   0)), datetime(2023, 3,10,10, 0,0,0) )
+        tf_30m = Interval.MIN30.floor
+        self.assertEqual( tf_30m(datetime(2023,3,10,10,58,22, 444)), datetime(2023, 3,10,10,30,0,0) )
+        self.assertEqual( tf_30m(datetime(2023,3,10,10,20,55,1234)), datetime(2023, 3,10,10, 0,0,0) )
+        tf_1h = Interval.HOUR1.floor
+        self.assertEqual(  tf_1h(datetime(2023,3,10,10,58,22, 444)), datetime(2023, 3,10,10, 0,0,0) )
+        self.assertEqual(  tf_1h(datetime(2023,3,10,10,20,55,1234)), datetime(2023, 3,10,10, 0,0,0) )
+        tf_1d = Interval.DAY1.floor
+        self.assertEqual(  tf_1d(datetime(2023,3,10,11, 1,46,6219)), datetime(2023, 3,10, 0, 0,0,0) )
+        tf_1w = Interval.WEEK1.floor
+        self.assertEqual(  tf_1w(datetime(2023,3,10,11, 1,55,6219)), datetime(2023, 3, 6, 0, 0,0,0) )
+        self.assertEqual(  tf_1w(datetime(2023,1, 1, 1, 1, 1,   1)), datetime(2022,12,26, 0, 0,0,0) )
+        tf_1mo = Interval.MONTH1.floor
+        self.assertEqual( tf_1mo(datetime(2023,3,10,11, 1,55,6219)), datetime(2023, 3, 1, 0, 0,0,0) )
+        self.assertEqual( tf_1mo(datetime(2023,1, 1, 1, 1, 1,   1)), datetime(2023, 1, 1, 0, 0,0,0) )
+        # check at the edges
+        self.assertEqual( tf_30m(datetime(2023,3,10,10,29,59,999999)), datetime(2023, 3,10,10, 0,0,0) )
+        self.assertEqual( tf_30m(datetime(2023,3,10,10,30, 0,     0)), datetime(2023, 3,10,10,30,0,0) )
+        self.assertEqual( tf_30m(datetime(2023,3,10,10,30, 0,     1)), datetime(2023, 3,10,10,30,0,0) )
+        self.assertEqual( tf_30m(datetime(2023,3,10,10,30, 1,     0)), datetime(2023, 3,10,10,30,0,0) )
+        self.assertEqual( tf_15m(datetime(2023,3,10,10,29,59,999999)), datetime(2023, 3,10,10,15,0,0) )
+        self.assertEqual( tf_15m(datetime(2023,3,10,10,30, 0,     0)), datetime(2023, 3,10,10,30,0,0) )
+        self.assertEqual( tf_15m(datetime(2023,3,10,10,30, 0,     1)), datetime(2023, 3,10,10,30,0,0) )
+        self.assertEqual( tf_15m(datetime(2023,3,10,10,30, 1,     0)), datetime(2023, 3,10,10,30,0,0) )
 
     def test_metadata_logger(self):
         self.maxDiff = None

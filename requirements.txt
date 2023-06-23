@@ -1,7 +1,7 @@
 # python3 -m pip install --upgrade pip wheel
 # pip3 install --upgrade --upgrade-strategy=eager -r requirements.txt
 more-itertools >= 9.1.0
-igbpyutils >= 0.0.3
+igbpyutils
 Unidecode
 regex
 pyicu  # sudo apt-get build-dep python3-icu; Windows: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyicu
@@ -11,3 +11,4 @@ numpy
 pandas
 jschon
 rfc3986==1.5.0  # this is just to prevent a depencency issue in one of the packages (httpx?) and can maybe be removed in the future
+python-dateutil
