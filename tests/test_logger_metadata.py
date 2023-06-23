@@ -56,6 +56,7 @@ _TestLogger_md = Metadata(
         "Daily": MdTable(
             name = "Daily",
             prikey = 0,
+            interval = Interval.DAY1,
             columns = [
                 MdColumn( name="TIMESTAMP",   unit="TS",               type=TimestampNoTz(),     lodt=LoggerOrigDataType.CB_Timestamp ),
                 MdColumn( name="RECORD",      unit="RN",               type=NonNegInt(),         lodt=LoggerOrigDataType.CB_Integer   ),
@@ -75,6 +76,7 @@ _TestLogger_md = Metadata(
         "Hourly": MdTable(
             name = "Hourly",
             prikey = 0,
+            interval = Interval.HOUR1,
             columns = [
                 MdColumn( name="TIMESTAMP",   unit="TS",               type=TimestampNoTz(),     ),
                 MdColumn( name="RECORD",      unit="RN",               type=NonNegInt(),         ),
@@ -155,6 +157,7 @@ _DummyLogger_md = Metadata(
         "Daily": MdTable(
             name = "Daily",
             prikey = 0,
+            interval = Interval.UNDEF,
             columns = [
                 MdColumn( name="TIMESTAMP", unit="TS", type=TimestampNoTz() ),
             ],
@@ -227,12 +230,37 @@ class TestLoggerMetadata(unittest.TestCase):
         self.assertEqual( md.tables['Hourly'].sql, "testlogger_hourly" )
         self.assertEqual( md.tables['Hourly'].mappings['Press_Humid'].sql, "press_humid" )
 
-    def test_metadata_misc(self):
+    def test_metadata_times(self):
         md1 = load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"+05:30","min_datetime":"2023-01-01 12:34:56","tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
         self.assertEqual( md1.tz, timezone(timedelta(seconds=(5*60+30)*60)) )
         self.assertEqual( md1.min_datetime.isoformat(), "2023-01-01T12:34:56+05:30" )
         md2 = load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"+05:30","min_datetime":"2023-01-01 12:34:56+06:00","tables":{"foo":{"prikey":0,"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
         self.assertEqual( md2.min_datetime.isoformat(), "2023-01-01T12:34:56+06:00" )
+
+    def test_metadata_intervals(self):
+        self.assertEqual( load_logger_metadata(
+            b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
+            ).tables['foo'].interval, Interval.UNDEF )
+        self.assertEqual( load_logger_metadata(
+            b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"15min","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
+            ).tables['foo'].interval, Interval.MIN15 )
+        self.assertEqual( load_logger_metadata(
+            b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"30min","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
+            ).tables['foo'].interval, Interval.MIN30 )
+        self.assertEqual( load_logger_metadata(
+            b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"1hour","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
+            ).tables['foo'].interval, Interval.HOUR1 )
+        self.assertEqual( load_logger_metadata(
+            b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"1day","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
+            ).tables['foo'].interval, Interval.DAY1 )
+        self.assertEqual( load_logger_metadata(
+            b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"1week","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
+            ).tables['foo'].interval, Interval.WEEK1 )
+        self.assertEqual( load_logger_metadata(
+            b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"1month","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
+            ).tables['foo'].interval, Interval.MONTH1 )
+        with self.assertRaises(RuntimeError):  # "failed to validate" instead of the ValueError thrown from load_logger_metadata
+            load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"foo","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
 
     def test_metadata_errors(self):
         with self.assertRaises(RuntimeError): load_logger_metadata(b'{}')

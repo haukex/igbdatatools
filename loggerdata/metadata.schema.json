@@ -84,6 +84,9 @@
 						"minimum": 0,
 						"description": "The 0-based index into columns of the primary key."
 					},
+					"interval": {
+						"enum": ["15min", "30min", "1hour", "1day", "1week", "1month"]
+					},
 					"columns": {
 						"type": "array",
 						"items": {

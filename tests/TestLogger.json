@@ -21,6 +21,7 @@
 	],
 	"tables": {
 		"Daily": {
+			"interval": "1day",
 			"columns": [
 				{ "name": "TIMESTAMP",   "unit": "TS",                  "type": "TimestampNoTz", "lodt": "TS"    },
 				{ "name": "RECORD",      "unit": "RN",                  "type": "NonNegInt",     "lodt": "Int"   },
@@ -33,6 +34,7 @@
 			]
 		},
 		"Hourly": {
+			"interval": "1hour",
 			"columns": [
 				{ "name": "TIMESTAMP",   "unit": "TS",                  "type": "TimestampNoTz"              },
 				{ "name": "RECORD",      "unit": "RN",                  "type": "NonNegInt"                  },

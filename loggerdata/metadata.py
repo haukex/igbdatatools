@@ -242,6 +242,7 @@ class MdTable(MdBase):
     """
     name: str
     prikey: int  # is guessed to be 0 for TOA5 files where the first column is TIMESTAMP (in code below)
+    interval: Interval
     columns:  list[MdColumn]
     variants: dict[ tuple[ColumnHeader, ...], tuple[int, ...] ]
     mappings: dict[str, MdMapping] = field(default_factory=dict)
@@ -535,6 +536,17 @@ def load_logger_metadata(file) -> Metadata:
             tmd['prikey'] = 0
         else:
             raise ValueError(f"table {table} doesn't define a prikey and we couldn't guess one")
+        if 'interval' in tdata:
+            match tdata['interval']:
+                case '15min': tmd['interval'] = Interval.MIN15
+                case '30min': tmd['interval'] = Interval.MIN30
+                case '1hour': tmd['interval'] = Interval.HOUR1
+                case '1day': tmd['interval'] = Interval.DAY1
+                case '1week': tmd['interval'] = Interval.WEEK1
+                case '1month': tmd['interval'] = Interval.MONTH1
+                # this shouldn't happen because it's validated by the schema
+                case _: raise ValueError(f"Invalid interval {tdata['interval']!r}")  # pragma: no cover
+        else: tmd['interval'] = Interval.UNDEF
         if tbl_vars:
             # The first variant in the list gets special treatment: It is always a possible variant,
             # the others are only included if they are seen in the columns.
