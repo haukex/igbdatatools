@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 from collections.abc import Iterable, Generator
-from loggerdata.metadata import Interval
+from loggerdata.metadata import DataInterval
 from itertools import pairwise
 from enum import Enum
 from math import isfinite
@@ -52,8 +52,8 @@ def basic_quality(val, *, unusualvals :set = DEFAULT_UNUSUAL) -> BasicQuality:
         return BasicQuality.UNUSUAL
     return BasicQuality.BAD
 
-def check_timeseq_strict(seq :Iterable[datetime], *, interval :Interval) -> Generator[bool, None, None]:
-    """Checks whether the given sequence is strictly monotonically increasing according to the given ``Interval``,
+def check_timeseq_strict(seq :Iterable[datetime], *, interval :DataInterval) -> Generator[bool, None, None]:
+    """Checks whether the given sequence is strictly monotonically increasing according to the given ``DataInterval``,
     returning ``True`` or ``False`` for each item in the sequence."""
     for i, (x, y) in enumerate(pairwise(seq)):
         if i==0: yield x == interval.floor(x)

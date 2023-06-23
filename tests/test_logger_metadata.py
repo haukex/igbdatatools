@@ -22,7 +22,7 @@ along with this program. If not, see https://www.gnu.org/licenses/
 """
 import unittest
 from pathlib import Path
-from loggerdata.metadata import Interval, load_logger_metadata, MdBaseCol, MdColumn, MdMapEntry, MdMapping, MappingType, \
+from loggerdata.metadata import DataInterval, load_logger_metadata, MdBaseCol, MdColumn, MdMapEntry, MdMapping, MappingType, \
     MdTable, Toa5EnvMatch, Metadata, LoggerType, ColumnHeader, MdCollection, LoggerOrigDataType, TimeRange
 from dateutil.relativedelta import relativedelta
 from zoneinfo import ZoneInfo
@@ -56,7 +56,7 @@ _TestLogger_md = Metadata(
         "Daily": MdTable(
             name = "Daily",
             prikey = 0,
-            interval = Interval.DAY1,
+            interval = DataInterval.DAY1,
             columns = [
                 MdColumn( name="TIMESTAMP",   unit="TS",               type=TimestampNoTz(),     lodt=LoggerOrigDataType.CB_Timestamp ),
                 MdColumn( name="RECORD",      unit="RN",               type=NonNegInt(),         lodt=LoggerOrigDataType.CB_Integer   ),
@@ -76,7 +76,7 @@ _TestLogger_md = Metadata(
         "Hourly": MdTable(
             name = "Hourly",
             prikey = 0,
-            interval = Interval.HOUR1,
+            interval = DataInterval.HOUR1,
             columns = [
                 MdColumn( name="TIMESTAMP",   unit="TS",               type=TimestampNoTz(),     ),
                 MdColumn( name="RECORD",      unit="RN",               type=NonNegInt(),         ),
@@ -157,7 +157,7 @@ _DummyLogger_md = Metadata(
         "Daily": MdTable(
             name = "Daily",
             prikey = 0,
-            interval = Interval.UNDEF,
+            interval = DataInterval.UNDEF,
             columns = [
                 MdColumn( name="TIMESTAMP", unit="TS", type=TimestampNoTz() ),
             ],
@@ -171,34 +171,34 @@ _DummyLogger_md = Metadata(
 class TestLoggerMetadata(unittest.TestCase):
 
     def test_interval_as_timedelta(self):
-        with self.assertRaises(ValueError): _ = Interval.UNDEF.delta
-        self.assertEqual(Interval.MIN15.delta, timedelta(minutes=15))
-        self.assertEqual(Interval.MIN30.delta, timedelta(minutes=30))
-        self.assertEqual(Interval.HOUR1.delta, timedelta(hours=1))
-        self.assertEqual(Interval.DAY1.delta, timedelta(days=1))
-        self.assertEqual(Interval.WEEK1.delta, timedelta(weeks=1))
-        self.assertEqual(Interval.MONTH1.delta, relativedelta(months=1))
+        with self.assertRaises(ValueError): _ = DataInterval.UNDEF.delta
+        self.assertEqual(DataInterval.MIN15.delta,  timedelta(minutes=15))
+        self.assertEqual(DataInterval.MIN30.delta,  timedelta(minutes=30))
+        self.assertEqual(DataInterval.HOUR1.delta,  timedelta(hours=1))
+        self.assertEqual(DataInterval.DAY1.delta,   timedelta(days=1))
+        self.assertEqual(DataInterval.WEEK1.delta,  timedelta(weeks=1))
+        self.assertEqual(DataInterval.MONTH1.delta, relativedelta(months=1))
 
     def test_timefloor(self):
-        with self.assertRaises(ValueError): _ = Interval.UNDEF.floor
-        self.assertEqual( Interval.MIN15.floor(datetime(2023,6,23,10,59,59)), datetime(2023,6,23,10,45,0,0) )
-        tf_15m = Interval.MIN15.floor
+        with self.assertRaises(ValueError): _ = DataInterval.UNDEF.floor
+        self.assertEqual( DataInterval.MIN15.floor(datetime(2023,6,23,10,59,59)), datetime(2023,6,23,10,45,0,0) )
+        tf_15m = DataInterval.MIN15.floor
         self.assertEqual( tf_15m(datetime(2023,3,10,10,55,23,4523)), datetime(2023, 3,10,10,45,0,0) )
         self.assertEqual( tf_15m(datetime(2023,3,10,10,44,59,2231)), datetime(2023, 3,10,10,30,0,0) )
         self.assertEqual( tf_15m(datetime(2023,3,10,10,15, 0,   1)), datetime(2023, 3,10,10,15,0,0) )
         self.assertEqual( tf_15m(datetime(2023,3,10,10, 0, 0,   0)), datetime(2023, 3,10,10, 0,0,0) )
-        tf_30m = Interval.MIN30.floor
+        tf_30m = DataInterval.MIN30.floor
         self.assertEqual( tf_30m(datetime(2023,3,10,10,58,22, 444)), datetime(2023, 3,10,10,30,0,0) )
         self.assertEqual( tf_30m(datetime(2023,3,10,10,20,55,1234)), datetime(2023, 3,10,10, 0,0,0) )
-        tf_1h = Interval.HOUR1.floor
+        tf_1h = DataInterval.HOUR1.floor
         self.assertEqual(  tf_1h(datetime(2023,3,10,10,58,22, 444)), datetime(2023, 3,10,10, 0,0,0) )
         self.assertEqual(  tf_1h(datetime(2023,3,10,10,20,55,1234)), datetime(2023, 3,10,10, 0,0,0) )
-        tf_1d = Interval.DAY1.floor
+        tf_1d = DataInterval.DAY1.floor
         self.assertEqual(  tf_1d(datetime(2023,3,10,11, 1,46,6219)), datetime(2023, 3,10, 0, 0,0,0) )
-        tf_1w = Interval.WEEK1.floor
+        tf_1w = DataInterval.WEEK1.floor
         self.assertEqual(  tf_1w(datetime(2023,3,10,11, 1,55,6219)), datetime(2023, 3, 6, 0, 0,0,0) )
         self.assertEqual(  tf_1w(datetime(2023,1, 1, 1, 1, 1,   1)), datetime(2022,12,26, 0, 0,0,0) )
-        tf_1mo = Interval.MONTH1.floor
+        tf_1mo = DataInterval.MONTH1.floor
         self.assertEqual( tf_1mo(datetime(2023,3,10,11, 1,55,6219)), datetime(2023, 3, 1, 0, 0,0,0) )
         self.assertEqual( tf_1mo(datetime(2023,1, 1, 1, 1, 1,   1)), datetime(2023, 1, 1, 0, 0,0,0) )
         # check at the edges
@@ -240,25 +240,25 @@ class TestLoggerMetadata(unittest.TestCase):
     def test_metadata_intervals(self):
         self.assertEqual( load_logger_metadata(
             b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
-            ).tables['foo'].interval, Interval.UNDEF )
+            ).tables['foo'].interval, DataInterval.UNDEF )
         self.assertEqual( load_logger_metadata(
             b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"15min","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
-            ).tables['foo'].interval, Interval.MIN15 )
+            ).tables['foo'].interval, DataInterval.MIN15 )
         self.assertEqual( load_logger_metadata(
             b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"30min","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
-            ).tables['foo'].interval, Interval.MIN30 )
+            ).tables['foo'].interval, DataInterval.MIN30 )
         self.assertEqual( load_logger_metadata(
             b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"1hour","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
-            ).tables['foo'].interval, Interval.HOUR1 )
+            ).tables['foo'].interval, DataInterval.HOUR1 )
         self.assertEqual( load_logger_metadata(
             b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"1day","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
-            ).tables['foo'].interval, Interval.DAY1 )
+            ).tables['foo'].interval, DataInterval.DAY1 )
         self.assertEqual( load_logger_metadata(
             b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"1week","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
-            ).tables['foo'].interval, Interval.WEEK1 )
+            ).tables['foo'].interval, DataInterval.WEEK1 )
         self.assertEqual( load_logger_metadata(
             b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"1month","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}'
-            ).tables['foo'].interval, Interval.MONTH1 )
+            ).tables['foo'].interval, DataInterval.MONTH1 )
         with self.assertRaises(RuntimeError):  # "failed to validate" instead of the ValueError thrown from load_logger_metadata
             load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"interval":"foo","columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
 

@@ -23,7 +23,7 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import unittest
 from collections.abc import Iterable
 import loggerdata.qualitycheck as qc
-from loggerdata.metadata import Interval
+from loggerdata.metadata import DataInterval
 from datetime import datetime
 
 class TestLoggerQualityCheck(unittest.TestCase):
@@ -61,10 +61,10 @@ class TestLoggerQualityCheck(unittest.TestCase):
         self.assertEqual( qc.BasicQuality.BAD, qc.basic_quality(object()) )
 
     def test_check_timeseq_strict(self):
-        def run(interval: Interval, seq :Iterable[tuple[datetime, bool]], *, floor :bool=False):
+        def run(interval: DataInterval, seq :Iterable[tuple[datetime, bool]], *, floor :bool=False):
             self.assertEqual( tuple( (x[1] for x in seq) ),
                tuple( qc.check_timeseq_strict( ( interval.floor(x[0]) if floor else x[0] for x in seq), interval=interval ) ) )
-        run( Interval.MIN15, (
+        run( DataInterval.MIN15, (
             (datetime(2022,5,22,12,00,00), True),
             (datetime(2022,5,22,12,15,00), True),
             (datetime(2022,5,22,12,30,00), True),
@@ -104,17 +104,17 @@ class TestLoggerQualityCheck(unittest.TestCase):
             (datetime(2022,5,24,16,40,00), False),
             (datetime(2022,5,24,16,42,30), False),
         ) )
-        run( Interval. MIN15, (
+        run( DataInterval. MIN15, (
             (datetime(2022,5,22,12,00,16), False),
             (datetime(2022,5,22,12,15,00), True),
             (datetime(2022,5,22,12,25,00), False),
         ) )
-        run( Interval.MIN15, (
+        run( DataInterval.MIN15, (
             (datetime(2022,5,22,12, 7,43), False),
             (datetime(2022,5,22,12,15,00), True),
             (datetime(2022,5,22,12,29,11), False),
         ) )
-        run( Interval.MIN15, (
+        run( DataInterval.MIN15, (
             (datetime(2022,5,22,12,00,00), True),
             (datetime(2022,5,22,12,15,00), True),
             (datetime(2022,5,22,12,30,00), True),
@@ -158,19 +158,19 @@ class TestLoggerQualityCheck(unittest.TestCase):
             (datetime(2022,5,24,15,30,00), True),
             (datetime(2022,5,24,15,45,00), True),
         ) )
-        run( Interval.MIN30, (
+        run( DataInterval.MIN30, (
             (datetime(2022,5,22,12,00,00), True),
             (datetime(2022,5,22,12,35,43), False),
             (datetime(2022,5,22,12,45,00), False),
             (datetime(2022,5,22,13,00,00), True),
         ) )
-        run( Interval.HOUR1, (
+        run( DataInterval.HOUR1, (
             (datetime(2022,5,22,12,00,00), True),
             (datetime(2022,5,22,13,10,00), False),
             (datetime(2022,5,22,14,00,00), True),
             (datetime(2022,5,22,17, 5,00), False),
         ) )
-        run( Interval.DAY1, (
+        run( DataInterval.DAY1, (
             (datetime(2023,1,2,0), True),
             (datetime(2023,1,3,1,5), False),
             (datetime(2023,1,4,0), True),
@@ -179,7 +179,7 @@ class TestLoggerQualityCheck(unittest.TestCase):
         ) )
         # Especially weekly and monthly sampling intervals are usually sampling that is performed monthly,
         # therefore, to check such time sequences, it makes more sense to floor the time values first.
-        run( Interval.DAY1, (
+        run( DataInterval.DAY1, (
             (datetime(2023,3,10, 0, 0, 0), True),
             (datetime(2023,3,11, 0, 0, 0), True),
             (datetime(2023,3,12,13,45, 0), True),
@@ -192,7 +192,7 @@ class TestLoggerQualityCheck(unittest.TestCase):
             (datetime(2023,3,19,23,22,22), False),
             (datetime(2023,3,20,12,34,56), True),
         ), floor=True )
-        run( Interval.WEEK1, (
+        run( DataInterval.WEEK1, (
             (datetime(2023,3,10, 0, 0, 0), True),
             (datetime(2023,3,14,11,22,33), True),
             (datetime(2023,3,26,23,59,59), True),
@@ -206,7 +206,7 @@ class TestLoggerQualityCheck(unittest.TestCase):
             (datetime(2023,5,16,11,54,12), False),
             (datetime(2023,5,25,18,12,45), True),
         ), floor=True )
-        run( Interval.MONTH1, (
+        run( DataInterval.MONTH1, (
             (datetime(2023,1,10,11, 4,32), True),
             (datetime(2023,2,22,19,47,11), True),
             (datetime(2023,3,15,11, 0,44), True),

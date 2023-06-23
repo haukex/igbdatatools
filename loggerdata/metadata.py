@@ -41,7 +41,7 @@ from dateutil.relativedelta import relativedelta
 short_units :dict[str,str] = json.loads(pkgutil.get_data('loggerdata', 'short_units.json').decode('UTF-8'))
 del short_units['$comment']
 
-class Interval(Enum):
+class DataInterval(Enum):
     UNDEF = 0
     MIN15 = 1
     MIN30 = 2
@@ -53,42 +53,42 @@ class Interval(Enum):
     @cache
     def delta(self) -> timedelta|relativedelta:
         match self:
-            case Interval.MIN15:  return timedelta(minutes=15)
-            case Interval.MIN30:  return timedelta(minutes=30)
-            case Interval.HOUR1:  return timedelta(hours=1)
-            case Interval.DAY1:   return timedelta(days=1)
-            case Interval.WEEK1:  return timedelta(weeks=1)
-            case Interval.MONTH1: return relativedelta(months=1)
+            case DataInterval.MIN15:  return timedelta(minutes=15)
+            case DataInterval.MIN30:  return timedelta(minutes=30)
+            case DataInterval.HOUR1:  return timedelta(hours=1)
+            case DataInterval.DAY1:   return timedelta(days=1)
+            case DataInterval.WEEK1:  return timedelta(weeks=1)
+            case DataInterval.MONTH1: return relativedelta(months=1)
             case _: raise ValueError(f"unhandled interval {self!r}")
     @property
     @cache
     def floor(self) -> Callable[[datetime], datetime]:
         match self:
-            case Interval.MIN15:
+            case DataInterval.MIN15:
                 def timefloor(stamp :datetime) -> datetime:
                     if stamp.minute >= 45: cmin = 45
                     elif stamp.minute >= 30: cmin = 30
                     elif stamp.minute >= 15: cmin = 15
                     else: cmin = 0
                     return stamp.replace(minute=cmin, second=0, microsecond=0)
-            case Interval.MIN30:
+            case DataInterval.MIN30:
                 def timefloor(stamp :datetime) -> datetime:
                     if stamp.minute>=30: cmin = 30
                     else: cmin = 0
                     return stamp.replace(minute=cmin, second=0, microsecond=0)
-            case Interval.HOUR1:
+            case DataInterval.HOUR1:
                 def timefloor(stamp :datetime) -> datetime:
                     return stamp.replace(minute=0, second=0, microsecond=0)
-            case Interval.DAY1:
+            case DataInterval.DAY1:
                 def timefloor(stamp :datetime) -> datetime:
                     return stamp.replace(hour=0, minute=0, second=0, microsecond=0)
-            case Interval.WEEK1:
+            case DataInterval.WEEK1:
                 def timefloor(stamp :datetime) -> datetime:
                     isoyear, isoweek, _isoday = stamp.isocalendar()
                     newdate = datetime.fromisocalendar(isoyear, isoweek, 1)
                     return stamp.replace(year=newdate.year, month=newdate.month, day=newdate.day,
                                          hour=0, minute=0, second=0, microsecond=0)
-            case Interval.MONTH1:
+            case DataInterval.MONTH1:
                 def timefloor(stamp :datetime) -> datetime:
                     return stamp.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             case _: raise ValueError(f"unhandled interval {self!r}")
@@ -242,7 +242,7 @@ class MdTable(MdBase):
     """
     name: str
     prikey: int  # is guessed to be 0 for TOA5 files where the first column is TIMESTAMP (in code below)
-    interval: Interval
+    interval: DataInterval
     columns:  list[MdColumn]
     variants: dict[ tuple[ColumnHeader, ...], tuple[int, ...] ]
     mappings: dict[str, MdMapping] = field(default_factory=dict)
@@ -538,15 +538,15 @@ def load_logger_metadata(file) -> Metadata:
             raise ValueError(f"table {table} doesn't define a prikey and we couldn't guess one")
         if 'interval' in tdata:
             match tdata['interval']:
-                case '15min': tmd['interval'] = Interval.MIN15
-                case '30min': tmd['interval'] = Interval.MIN30
-                case '1hour': tmd['interval'] = Interval.HOUR1
-                case '1day': tmd['interval'] = Interval.DAY1
-                case '1week': tmd['interval'] = Interval.WEEK1
-                case '1month': tmd['interval'] = Interval.MONTH1
+                case '15min':  tmd['interval'] = DataInterval.MIN15
+                case '30min':  tmd['interval'] = DataInterval.MIN30
+                case '1hour':  tmd['interval'] = DataInterval.HOUR1
+                case '1day':   tmd['interval'] = DataInterval.DAY1
+                case '1week':  tmd['interval'] = DataInterval.WEEK1
+                case '1month': tmd['interval'] = DataInterval.MONTH1
                 # this shouldn't happen because it's validated by the schema
                 case _: raise ValueError(f"Invalid interval {tdata['interval']!r}")  # pragma: no cover
-        else: tmd['interval'] = Interval.UNDEF
+        else: tmd['interval'] = DataInterval.UNDEF
         if tbl_vars:
             # The first variant in the list gets special treatment: It is always a possible variant,
             # the others are only included if they are seen in the columns.
