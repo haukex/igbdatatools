@@ -52,9 +52,21 @@ def basic_quality(val, *, unusualvals :set = DEFAULT_UNUSUAL) -> BasicQuality:
         return BasicQuality.UNUSUAL
     return BasicQuality.BAD
 
-def check_timeseq_strict(seq :Iterable[datetime], *, interval :DataInterval) -> Generator[bool, None, None]:
+def check_timeseq_strict(seq :Iterable[datetime], *, interval :DataInterval) -> Generator[BasicQuality, None, None]:
     """Checks whether the given sequence is strictly monotonically increasing according to the given ``DataInterval``,
-    returning ``True`` or ``False`` for each item in the sequence."""
+    returning a :class:`BasicQuality` value for each item in the sequence.
+
+    Note that ``UNUSUAL`` means that a gap larger than the expected interval is present.
+    """
     for i, (x, y) in enumerate(pairwise(seq)):
-        if i==0: yield x == interval.floor(x)
-        yield y == interval.floor(y) and y == interval.floor(x) + interval.delta
+        if i==0: yield BasicQuality.GOOD if x == interval.floor(x) else BasicQuality.BAD
+        if y == interval.floor(y):
+            exp_y = interval.floor(x) + interval.delta
+            if y == exp_y:
+                yield BasicQuality.GOOD
+            elif y > exp_y:  # a gap
+                yield BasicQuality.UNUSUAL
+            else:
+                yield BasicQuality.BAD
+        else:
+            yield BasicQuality.BAD
