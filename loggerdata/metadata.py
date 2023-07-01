@@ -186,7 +186,7 @@ class MdBaseCol(MdBase):
 @dataclass(kw_only=True)
 class MdColumn(MdBaseCol):
     """A full column definition."""
-    type:    Optional[datatypes.BaseType] = None  #TODO Later: won't be optional in the future (once all our logger metadata is complete)
+    type:    Optional[datatypes.BaseType] = None  #TODO Later: won't be optional in the future (once all our logger metadata is complete) - or maybe it should remain optional, e.g. on columns we don't care about?
     lodt:    Optional[LoggerOrigDataType] = None
     var:     Optional[str] = None
     desc:    Optional[str] = None

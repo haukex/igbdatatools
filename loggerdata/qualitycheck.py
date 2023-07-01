@@ -37,7 +37,7 @@ class BasicQuality(Enum):
 DEFAULT_UNUSUAL = frozenset({ "", 7999, -7999, "7999", "-7999" })
 
 def basic_quality(val, *, unusualvals :set = DEFAULT_UNUSUAL) -> BasicQuality:
-    """Does some simply quality checks on the data value."""
+    """Does some simple quality checks on the data value and returns a :class:`BasicQuality` value."""
     if val is None:
         return BasicQuality.BAD
     elif isinstance(val, str):
