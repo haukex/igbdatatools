@@ -44,15 +44,15 @@ def read_header(csvreader :Iterator[Sequence[str]]) -> tuple[EnvironmentLine, tu
     # noinspection PyShadowingNames,PyUnresolvedReferences
     """Read the header of a TOA5 file.
 
-    A common use case to read a TOA5 file would be:
+    A common use case to read a TOA5 file would be the following; as you can see the main difference
+    between reading a regular CSV file and a TOA5 file is the additional call to :func:`read_header`.
 
     >>> import csv
-    ... from loggerdata.metadata import ColumnHeader
     ... from loggerdata.toa5 import read_header
     ... with open(filename, encoding='ASCII', newline='') as fh:
     ...     csvrd = csv.reader(fh, strict=True)
     ...     envline, columns = read_header(csvrd)
-    ...     header = [ ColumnHeader(*col).csv for col in columns ]
+    ...     header = [ col.csv for col in columns ]  # optional
     ...     for row in csvrd:
     ...         pass  # do something with each row here
     """

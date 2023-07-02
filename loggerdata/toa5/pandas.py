@@ -22,15 +22,13 @@ along with this program. If not, see https://www.gnu.org/licenses/
 """
 import csv
 from loggerdata.toa5 import read_header, Toa5Error
-from loggerdata.metadata import ColumnHeader
 import pandas
 
 def toa5_to_pandas_dataframe(filename, *, csvnames :bool = True) -> pandas.DataFrame:
     """Read a TOA5 file into a Pandas data frame."""
     with open(filename, encoding='ASCII', newline='') as fh:
         envline, columns = read_header( csv.reader(fh, strict=True) )
-        cols = [ ColumnHeader(*c).csv for c in columns ] \
-            if csvnames else [ c[0] for c in columns ]
+        cols = [ c.csv if csvnames else c.name for c in columns ]
         if cols[0]!='TIMESTAMP':
             raise Toa5Error("Can't (yet) handle files where the first column isn't TIMESTAMP")
         dframe = pandas.read_csv(fh, header=None, names=cols,
