@@ -218,15 +218,20 @@ class MdMapEntry(MdBase):
 
 @dataclass(kw_only=True)
 class MdMapping(MdBase):
-    """A mapping from certain columns to other columns."""
+    """A mapping from certain columns to other columns.
+
+    :ivar old_idxs: A generated tuple of the column indicies of the mapping."""
     name :str
     type: MappingType
     map:  list[MdMapEntry]
+    old_idxs: tuple[int, ...] = field(default=None, init=False, compare=False)  # is set in MdTable.__post_init__()
     @property
     def sql(self):
         return self.name.lower()
     def validate(self):
         self._valid_ident(self.name)
+        if self.type not in tuple(MappingType):
+            raise ValueError("bad mapping type")
         for m in self.map: m.validate()
         return self
 
@@ -248,6 +253,19 @@ class MdTable(MdBase):
     variants: dict[ tuple[ColumnHeader, ...], tuple[int, ...] ]
     mappings: dict[str, MdMapping] = field(default_factory=dict)
     parent: 'Metadata' = field(default=None, init=False, repr=False, compare=False)  # is set in Metadata.__post_init__()
+    def __post_init__(self):
+        for mm in self.mappings.values():
+            idxs :list[int] = []
+            for me in mm.map:
+                #TODO Later: I'm certain the following search loop could be implemented more efficiently
+                # (need to check that MdBaseCol can be __eq__ with MdColumn or something similar)
+                for i, c in enumerate(self.columns):
+                    if me.old.name==c.name and me.old.unit==c.unit and me.old.prc==c.prc:
+                        idxs.append(i)
+                        break
+                else: pass  # pragma: no cover
+                # note we don't check the case that a column isn't found because validate() already does that
+            mm.old_idxs = tuple(idxs)
     @property
     def sql(self):
         return ( self.parent.logger_name + "_" + self.name ).lower()
@@ -275,6 +293,8 @@ class MdTable(MdBase):
                 if m.new.hdr in seen_hdr:
                     raise RuntimeError(f"map {mn} 'new' specifies existing column {m.new!r}")
             set(no_duplicates( (m.new.hdr for m in mm.map), name="mapping target"))
+            if len(mm.old_idxs) != len(mm.map):  # pragma: no cover
+                raise RuntimeError(f"internal error: map {mn} old_idxs was not properly initialized ({mm.old_idxs})?")
         for mn, mm in self.mappings.items():
             self._valid_ident(mn)
             mm.validate()

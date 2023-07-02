@@ -15,6 +15,7 @@ TODOs
 
 - Check and generate documentation with Sphinx
   - Many places that use double-backtick strings could use roles (`:func:` etc.) instead.
+  - See <https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists>
 - Apply `mypy` more
 
 

@@ -28,7 +28,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from igbpyutils.file import Filename
 from loggerdata import toa5
-from loggerdata.metadata import MdTable
+from loggerdata.metadata import MdTable, MappingType
 from datatypes import TimestampNoTz, PythonDataTypes, NumPyDataTypes
 
 class DataImportError(RuntimeError): pass
@@ -102,6 +102,14 @@ class Record:
             if isinstance(col.type, TimestampNoTz):
                 yield col.type.to_np_tz(val, self.tblmd.parent.tz)
             else: yield col.type.to_np(val)
+
+    def view(self, viewname :str) -> Generator[str|None, None, None]:
+        """Generate the requested view of this row."""
+        v = self.tblmd.mappings[viewname]
+        if v.type != MappingType.VIEW:
+            raise TypeError(f"expected a VIEW mapping, not {v.type!r}")
+        for i in v.old_idxs:
+            yield self.fullrow[i]
 
 @dataclass(kw_only=True, frozen=True)
 class Toa5Record(Record):

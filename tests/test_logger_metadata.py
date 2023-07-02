@@ -218,6 +218,7 @@ class TestLoggerMetadata(unittest.TestCase):
         #with open("expect.txt","w") as fh: pprint(_TestLogger_md, stream=fh)
         #with open("got.txt","w") as fh: pprint(md, stream=fh)
         self.assertEqual( md, _TestLogger_md )
+        self.assertEqual( md.tables['Hourly'].mappings['Press_Humid'].old_idxs, (0,8,7) )
         self.assertEqual( "TestLogger/Daily", md.tables['Daily'].tblident )
         self.assertEqual( "TestLogger/Hourly", md.tables['Hourly'].tblident )
         for tbl in ("Daily","Hourly"):
@@ -324,6 +325,9 @@ class TestLoggerMetadata(unittest.TestCase):
             md.tables['foo'].mappings['xyz'] = MdMapping( name="xyz", type=MappingType.VIEW, map=[
                 MdMapEntry( old=MdBaseCol(name="TIMESTAMP",unit="TS"), new=MdBaseCol(name="TIMESTAMP",unit="TS") ) ] )
             with self.assertRaises(RuntimeError): md.validate()
+        with self.assertRaises(ValueError):
+            # noinspection PyTypeChecker
+            MdMapping( name="xyz", type=None, map=[] ).validate()
         with self.assertRaises(ValueError):
             load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS","sens":"xy"}]}}}')
         with self.assertRaises(ValueError):

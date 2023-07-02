@@ -60,7 +60,7 @@ def header_match(envline :toa5.EnvironmentLine, columns :tuple[ColumnHeader, ...
 
 def read_toa5_records(fh :Iterable[str], *, metadatas :MdCollection|Metadata|MdTable,
         filenames :Optional[Filename|Sequence[Filename]] = None ) -> Generator[Toa5Record, None, None]:
-    """Read a TOA5 file, returning ``Record``s for each row in the file."""
+    """Read a TOA5 file, returning a :class:`Toa5Record` for each row in the file."""
     metadatas = MdCollection(metadatas)
     csvrd = csv.reader(fh, strict=True)
     envline, columns = toa5.read_header(csvrd)

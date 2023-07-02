@@ -21,6 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 import unittest
+from igbpyutils.test import tempcopy
 from dataclasses import replace
 from datetime import datetime
 import numpy
@@ -30,7 +31,8 @@ from loggerdata.importdefs import Record, DataFileType, RecordError
 class TestLoggerDataImportDefs(unittest.TestCase):
 
     md = load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":'
-        b'{"prikey":0,"columns":[ {"name":"Hello"}, {"name":"World"}, {"name":"Foo"}, {"name":"Bar"}, {"name":"Quz"} ]}}}')
+        b'{"prikey":0,"columns":[ {"name":"Hello"}, {"name":"World"}, {"name":"Foo"}, {"name":"Bar"}, {"name":"Quz"} ],'
+        b'"mappings":{"xy":{"type":"view","map":[{"old":{"name":"Foo"},"new":{"name":"xyz"}}]}} }}}')
 
     def test_record_row(self):
         self.assertEqual( Record(origrow=("abc","def"), tblmd=self.md.tables['foo'], variant=(1,3),
@@ -67,6 +69,15 @@ class TestLoggerDataImportDefs(unittest.TestCase):
                       variant=(0,1,2,3), filenames=(), srcline=5, filetype=DataFileType.TOA5).typecheck()
         self.assertEqual( tuple(rec2.fullrow_as_py()), (datetime.fromisoformat("2022-12-01 13:00:00Z"),datetime.fromisoformat("2021-06-19 00:00:00Z"),42,-5624536) )
         self.assertEqual( tuple(rec2.fullrow_as_np()), (numpy.datetime64("2022-12-01 13:00:00"),numpy.datetime64("2021-06-19 00:00:00"),numpy.uint32(42),numpy.int64(-5624536)) )
+
+    def test_record_view(self):
+        rec = Record(origrow=("abc","def","ghi","jkl","mno"), tblmd=self.md.tables['foo'], variant=(0,1,2,3,4),
+                     filenames=(), srcline=1, filetype=DataFileType.TOA5)
+        self.assertEqual( tuple(rec.view('xy')), ("ghi",) )
+        with tempcopy(self.md) as md2:
+            md2.tables['foo'].mappings['xy'].type = None
+            with self.assertRaises(TypeError):
+                tuple( replace(rec, tblmd=md2.tables['foo']).view('xy') )
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
