@@ -41,7 +41,21 @@ class EnvironmentLine(NamedTuple):
 
 _envline_keys = ('toa5',) + EnvironmentLine._fields
 def read_header(csvreader :Iterator[Sequence[str]]) -> tuple[EnvironmentLine, tuple[ColumnHeader, ...]]:
-    """Read the header of a TOA5 file."""
+    # noinspection PyShadowingNames,PyUnresolvedReferences
+    """Read the header of a TOA5 file.
+
+    A common use case to read a TOA5 file would be:
+
+    >>> import csv
+    ... from loggerdata.metadata import ColumnHeader
+    ... from loggerdata.toa5 import read_header
+    ... with open(filename, encoding='ASCII', newline='') as fh:
+    ...     csvrd = csv.reader(fh, strict=True)
+    ...     envline, columns = read_header(csvrd)
+    ...     header = [ ColumnHeader(*col).csv for col in columns ]
+    ...     for row in csvrd:
+    ...         pass  # do something with each row here
+    """
     # ### Read the environment line, for file format see e.g. the CR1000 manual
     try:
         envline = next(csvreader)
