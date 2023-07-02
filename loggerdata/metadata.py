@@ -101,6 +101,7 @@ class LoggerOrigDataType(Enum):
     CB_Timestamp = 2
     CB_Integer = 3
 
+#TODO Later: ColumnHeader (and DataInterval?) could make more sense in impotdefs?
 class ColumnHeader(NamedTuple):
     """Class (named tuple) representing a column header.
 
@@ -261,6 +262,19 @@ class MdTable(MdBase):
         if not 0 <= self.prikey < len(self.columns):
             raise IndexError("prikey outside of range")
         for c in self.columns: c.validate()
+        # the dupe check on hdr covers the combination of name/unit/prc
+        seen_hdr = set(no_duplicates( (c.hdr for c in self.columns), name='column') )
+        set(no_duplicates( (c.sql for c in self.columns), name='sql column name'))
+        set(no_duplicates( (c.hdr.csv for c in self.columns), name='csv column name'))
+        for mn, mm in self.mappings.items():
+            if mn != mm.name:
+                raise RuntimeError(f"mapping key {mn!r} != name {mm.name!r}")
+            for m in mm.map:
+                if m.old.hdr not in seen_hdr:
+                    raise RuntimeError(f"map {mn} 'old' specifies unknown column {m.old!r}")
+                if m.new.hdr in seen_hdr:
+                    raise RuntimeError(f"map {mn} 'new' specifies existing column {m.new!r}")
+            set(no_duplicates( (m.new.hdr for m in mm.map), name="mapping target"))
         for mn, mm in self.mappings.items():
             self._valid_ident(mn)
             mm.validate()
@@ -380,19 +394,6 @@ class Metadata(MdBase):
                     raise ValueError(f"Failed to get tzname from {self.tz}") from ex
                 if tzname!='UTC' and have_ts_no_tz:
                     warnings.warn(f"Table {tn} has TimestampNoTz columns and non-UTC timezone (converstion to UTC recommended!)")
-            # the dupe check on hdr covers the combination of name/unit/prc
-            seen_hdr = set(no_duplicates( (c.hdr for c in tt.columns), name='column') )
-            set(no_duplicates( (c.sql for c in tt.columns), name='sql column name'))
-            set(no_duplicates( (c.hdr.csv for c in tt.columns), name='csv column name'))
-            for mn, mm in tt.mappings.items():
-                if mn != mm.name:
-                    raise RuntimeError(f"mapping key {mn!r} != name {mm.name!r}")
-                for m in mm.map:
-                    if m.old.hdr not in seen_hdr:
-                        raise RuntimeError(f"map {mn} 'old' specifies unknown column {m.old!r}")
-                    if m.new.hdr in seen_hdr:
-                        raise RuntimeError(f"map {mn} 'new' specifies existing column {m.new!r}")
-                set(no_duplicates( (m.new.hdr for m in mm.map), name="mapping target"))
         return self
 
 class MdCollection(Sequence[Metadata]):
