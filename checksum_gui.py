@@ -38,6 +38,10 @@ from typing import Union
 SortingType.fromstr = { 'no sort':SortingType.NO_SORT, 'by line':SortingType.BY_LINE,
     'by hash':SortingType.BY_HASH, 'by file':SortingType.BY_FILE }
 
+#TODO: Would be nice if the progress meter was also reflected on the windows status bar
+#TODO: The "Filename" should have a "Browse" button too
+#TODO: Would be nice if we could ignore certain files, like those in "System Volume Information"
+
 window = tk.Tk()
 window.report_callback_exception = \
     lambda ty,ex,tb: messagebox.showerror('Error', repr(ex), detail='\n'.join(javaishstacktrace(ex)))
