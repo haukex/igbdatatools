@@ -41,6 +41,7 @@ SortingType.fromstr = { 'no sort':SortingType.NO_SORT, 'by line':SortingType.BY_
 #TODO: Would be nice if the progress meter was also reflected on the windows status bar
 #TODO: The "Filename" should have a "Browse" button too
 #TODO: Would be nice if we could ignore certain files, like those in "System Volume Information"
+# Thumbs.db, System Volume Information/WPSettings.dat and IndexerVolumeGuid
 
 window = tk.Tk()
 window.report_callback_exception = \
