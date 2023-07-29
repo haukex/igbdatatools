@@ -22,7 +22,7 @@ along with this program. If not, see https://www.gnu.org/licenses/
 """
 import io
 import typing
-from igbpyutils.file import AnyPaths, to_Paths
+from igbpyutils.file import AnyPaths, to_Paths, BinaryStream
 from more_itertools import peekable
 from loggerdata.metadata import Metadata, MdTable, MdCollection
 from loggerdata.importdefs import DataFileType, NoTableMatch, Record
@@ -51,7 +51,7 @@ def simple_file_source(paths :AnyPaths) -> Generator[ tuple[tuple[Path], typing.
         with pth.open('rb') as fh:
             yield (pth,), fh
 
-def read_records(*, source :Iterable[tuple[ Sequence[PurePath], typing.IO[bytes]|io.RawIOBase|io.BufferedIOBase ]],
+def read_records(*, source :Iterable[tuple[ Sequence[PurePath], BinaryStream ]],
                  metadatas :MdCollection|Metadata|MdTable, ignore_notablematch :bool = True) -> Generator[Record, None, None]:
     """This generator reads a set of input files and returns ``Record``s.
 
