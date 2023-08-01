@@ -8,7 +8,8 @@ I find interesting / useful.
 Installing Python on Linux
 --------------------------
 
-    sudo apt-get install build-essential pkg-config libssl-dev libsqlite3-dev libgdbm-dev libc6-dev libbz2-dev libreadline-dev uuid-dev lzma-dev liblzma-dev libffi-dev tk-dev
+    sudo apt-get install build-essential pkg-config libssl-dev libsqlite3-dev libgdbm-dev libgdbm-compat-dev \
+        libc6-dev libbz2-dev libreadline-dev uuid-dev lzma-dev liblzma-dev libffi-dev tk-dev libncurses5-dev
     sudo apt-get build-dep python3 idle-python3.11
     
     umask 022
