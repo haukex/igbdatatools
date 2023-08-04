@@ -21,6 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 import io
+import csv
 import typing
 from igbpyutils.file import AnyPaths, to_Paths, BinaryStream
 from more_itertools import peekable
@@ -51,12 +52,17 @@ def simple_file_source(paths :AnyPaths) -> Generator[ tuple[tuple[Path], typing.
         with pth.open('rb') as fh:
             yield (pth,), fh
 
-def read_records(*, source :Iterable[tuple[ Sequence[PurePath], BinaryStream ]],
-                 metadatas :MdCollection|Metadata|MdTable, ignore_notablematch :bool = True) -> Generator[Record, None, None]:
-    """This generator reads a set of input files and returns ``Record``s.
+def get_record_sources(*, source :Iterable[tuple[ Sequence[PurePath], BinaryStream ]],
+                       metadatas :MdCollection|Metadata|MdTable) -> Generator[Generator[Record, None, None], None, None]:
+    """This generator turns a set of input files into a set of sources of :class:`Record`s.
 
-    ``source`` can come from ``simple_file_source``, or it can come from e.g. ``unzipwalk``
-    (note that ``unzipwalk`` returns a tuple of three values, while this function expects two).
+    ``source`` can be :func:`simple_file_source`, or it can come from e.g. :mod:`unzipwalk`
+    (note that the latter returns tuples of three values, while this function expects two).
+
+    Note that especially the first call of each returned generator may throw exceptions,
+    see e.g. :func:`~loggerdata.toa5.dataimport.header_match`.
+
+    :exc:`RecordError`
     """
     metadatas = MdCollection(metadatas)
     for fns, bfh in source:
@@ -64,14 +70,26 @@ def read_records(*, source :Iterable[tuple[ Sequence[PurePath], BinaryStream ]],
             fh = peekable(fh)
             ft = decide_filetype(fns[-1], fh)
             if ft == DataFileType.TOA5:
-                datasrc = peekable(read_toa5_records(fh, metadatas=metadatas, filenames=fns))
-                try: datasrc.peek()
-                except NoTableMatch:
-                    if not ignore_notablematch: raise
+                yield read_toa5_records(fh, metadatas=metadatas, filenames=fns)
             elif ft == DataFileType.CSV:
                 raise NotImplementedError(f"can't handle CSV yet ({fns!r})")
-            elif ft == DataFileType.UNKNOWN:
+            else:
+                assert ft == DataFileType.UNKNOWN
                 warnings.warn(f"skipping unknown file {fns!r}")
-                continue
-            else: raise RuntimeError("enum not covered completely")  # pragma: no cover
-            for rec in datasrc: yield rec.typecheck()
+
+def read_records(*, source :Iterable[tuple[ Sequence[PurePath], BinaryStream ]],
+                 metadatas :MdCollection|Metadata|MdTable, ignore_notablematch :bool = True) -> Generator[Record, None, None]:
+    """This generator reads a set of input files and returns (typechecked) ``Record``s.
+
+    TODO: This is hardly used, can it be deprecated in favor of get_record_sources?
+
+    ``source`` can come from ``simple_file_source``, or it can come from e.g. ``unzipwalk``
+    (note that ``unzipwalk`` returns a tuple of three values, while this function expects two).
+    """
+    for recsrc in get_record_sources(source=source, metadatas=metadatas):
+        recsrc = peekable(recsrc)
+        try: recsrc.peek()
+        except NoTableMatch:
+            if not ignore_notablematch: raise
+        for rec in recsrc:
+            yield rec.typecheck()

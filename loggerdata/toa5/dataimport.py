@@ -31,7 +31,12 @@ from loggerdata.importdefs import NoTableMatch, NoVariantMatch, NoMetadataMatch,
 
 def header_match(envline :toa5.EnvironmentLine, columns :tuple[ColumnHeader, ...],
                  metadatas: Iterable[Metadata]) -> tuple[MdTable, tuple[int, ...]]:
-    """Figure out which metadata/logger this header belongs to."""
+    """Figure out which metadata/logger this header belongs to.
+
+    :exc:`NoMetadataMatch`
+    :exc:`NoTableMatch`
+    :exc:`NoVariantMatch`
+    """
     found = []
     for md in metadatas:
         if md.logger_type == LoggerType.TOA5:
@@ -60,7 +65,10 @@ def header_match(envline :toa5.EnvironmentLine, columns :tuple[ColumnHeader, ...
 
 def read_toa5_records(fh :Iterable[str], *, metadatas :MdCollection|Metadata|MdTable,
         filenames :Optional[Filename|Sequence[Filename]] = None ) -> Generator[Toa5Record, None, None]:
-    """Read a TOA5 file, returning a :class:`Toa5Record` for each row in the file."""
+    """Read a TOA5 file, returning a :class:`Toa5Record` for each row in the file.
+
+    :exc:`RecordError` is raised for problems in reading the file.
+    """
     metadatas = MdCollection(metadatas)
     csvrd = csv.reader(fh, strict=True)
     envline, columns = toa5.read_header(csvrd)
@@ -68,7 +76,7 @@ def read_toa5_records(fh :Iterable[str], *, metadatas :MdCollection|Metadata|MdT
     try:
         for origrow in csvrd:
             if len(origrow) != len(variant):
-                raise RecordError("row column count mismatch")
+                raise RecordError(f"row column count mismatch, {filenames} line {csvrd.line_num}")
             yield Toa5Record(origrow=tuple(origrow), tblmd=tblmd, variant=variant, envline=envline,
                              filenames=filenames, srcline=csvrd.line_num, filetype=DataFileType.TOA5)
     except csv.Error as ex:
