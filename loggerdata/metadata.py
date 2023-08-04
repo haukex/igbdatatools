@@ -359,6 +359,7 @@ class Metadata(MdBase):
     sensors: Optional[dict[str,str]] = None
     known_gaps :tuple[TimeRange, ...] = ()
     skip_recs :tuple[TimeRange, ...] = ()
+    ignore_tables: frozenset[str] = frozenset()
     def __post_init__(self):
         for tbl in self.tables.values():
             tbl.parent = self
@@ -388,6 +389,10 @@ class Metadata(MdBase):
             e.validate()
         TimeRange.validate_set(self.known_gaps)
         TimeRange.validate_set(self.skip_recs)
+        for igt in self.ignore_tables:
+            self._valid_ident(igt)
+            if igt in self.tables:
+                raise ValueError(f"ignore_tables should not contain any actual tables")
         for tn, tt in self.tables.items():
             self._valid_ident(tn)
             if tt.parent is not self:
@@ -514,6 +519,7 @@ def load_logger_metadata(file) -> Metadata:
                 TimeRange( why=el['why'], start=datetime.fromisoformat(el['time']),
                 end=datetime.fromisoformat(el['end'] ) if 'end' in el else None) for el in js[k] )
     # handle tables and columns
+    md['ignore_tables'] = frozenset( no_duplicates(js['ignore_tables']) if 'ignore_tables' in js else () )
     for table, tdata in js['tables'].items():
         tmd = {
             "name" : table,

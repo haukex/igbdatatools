@@ -19,6 +19,7 @@
 	"skip_records": [
 		{ "time": "2021-06-19 19:00:00Z", "why": "example bad record (duplicate TS with differing data)" }
 	],
+	"ignore_tables": [ "Hello", "World" ],
 	"tables": {
 		"Daily": {
 			"interval": "1day",

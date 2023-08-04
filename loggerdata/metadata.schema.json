@@ -72,6 +72,12 @@
 		},
 		"known_gaps": { "$ref": "#/$defs/timerange", "title": "A list of known gaps in the input data" },
 		"skip_records": { "$ref": "#/$defs/timerange", "title": "Records to ignore in the input data" },
+		"ignore_tables": {
+			"type": "array",
+			"minItems": 1,
+			"items": { "$ref": "#/$defs/ident" },
+			"uniqueItems": true
+		},
 		"tables": {
 			"type": "object",
 			"propertyNames": { "$ref": "#/$defs/ident" },

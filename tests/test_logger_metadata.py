@@ -52,6 +52,7 @@ _TestLogger_md = Metadata(
     skip_recs = (
         TimeRange(why="example bad record (duplicate TS with differing data)", start=datetime.fromisoformat("2021-06-19 19:00:00Z")),
     ),
+    ignore_tables = frozenset(( 'Hello', 'World' )),
     tables = {
         "Daily": MdTable(
             name = "Daily",
@@ -355,6 +356,12 @@ class TestLoggerMetadata(unittest.TestCase):
             md.tz = None
             md.known_gaps = (TimeRange(why="x",start=datetime.fromisoformat("2023-01-02 03:04:05Z"),end=datetime.fromisoformat("2023-01-02 03:04:06")),)
             with self.assertRaises(ValueError): md.validate()
+        with self.assertRaises(RuntimeError):
+            load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","ignore_tables":[],"tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
+        with self.assertRaises(RuntimeError):
+            load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","ignore_tables":["hello","hello"],"tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
+        with self.assertRaises(ValueError):
+            load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","ignore_tables":["foo"],"tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
 
     def test_metadata_collection(self):
         md1 = load_logger_metadata( Path(__file__).parent/'TestLogger.json' )
