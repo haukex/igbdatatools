@@ -28,16 +28,20 @@ from dataclasses import dataclass
 from functools import cached_property
 from igbpyutils.file import Filename
 from loggerdata import toa5
-from loggerdata.metadata import MdTable, MappingType
+from loggerdata.metadata import Metadata, MdTable, MappingType
 from datatypes import TimestampNoTz, PythonDataTypes, NumPyDataTypes
 
 class DataImportError(RuntimeError): pass
 class NoMetadataMatch(DataImportError): pass
 class NoTableMatch(DataImportError):
-    def __init__(self, message :str, *, table_name :str):
+    def __init__(self, message :str, *, md :Metadata, table_name :str):
         self.message = message
+        self.md = md
         self.table_name = table_name
-class NoVariantMatch(DataImportError): pass
+class NoVariantMatch(DataImportError):
+    def __init__(self, message :str, *, tblmd :MdTable):
+        self.message = message
+        self.tblmd = tblmd
 class RecordError(DataImportError): pass
 
 class DataFileType(Enum):

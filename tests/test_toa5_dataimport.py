@@ -179,12 +179,14 @@ class TestToa5DataImport(unittest.TestCase):
                 header_match(env._replace(station_name="Bar"), (ColumnHeader("TIMESTAMP","TS"),), (md,))
         with self.assertRaises(RuntimeError):
             header_match(env, (ColumnHeader("TIMESTAMP","TS"),), (bmd,bmd))
-        with self.assertRaises(NoVariantMatch):
+        with self.assertRaises(NoVariantMatch) as cm:
             header_match(env, (ColumnHeader("Foobar"),), (bmd,))
+        self.assertIs( cm.exception.tblmd, bmd.tables['foo'] )
         with tempcopy(bmd) as md:
             md.tables['foo'].variants = { (ColumnHeader("Foobar"),) : (0,) }
-            with self.assertRaises(NoVariantMatch):
+            with self.assertRaises(NoVariantMatch) as cm:
                 header_match(env, (ColumnHeader("TIMESTAMP","TS"),), (md,))
+            self.assertIs( cm.exception.tblmd, md.tables['foo'] )
         with tempcopy(bmd) as md:
             md.tables['foo'].variants[(ColumnHeader("TIMESTAMP","TS"),)] = (0,1)
             with self.assertRaises(RuntimeError):

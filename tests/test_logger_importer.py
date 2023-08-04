@@ -127,6 +127,7 @@ class TestLoggerDataImporter(unittest.TestCase):
         with self.assertRaises(NoTableMatch) as cm:
             list( read_records(source=simple_file_source( Path(__file__).parent/'toa5'/'TestLogger_Status.dat' ),
                                metadatas=self.metad, ignore_notablematch=False ) )
+        self.assertIs(cm.exception.md, self.metad)
         self.assertEqual(cm.exception.table_name, 'Status')
 
 if __name__ == '__main__':  # pragma: no cover
