@@ -63,7 +63,9 @@ class CanConnect(Protocol):  # pragma: no cover
     def connect(self, *args, **kwargs) -> CanExecute: ...
 DriverModule = ModuleType | CanConnect
 
-def load_driver(*, verbose :bool = True) -> DriverModule:
+# note of course the following is covered by tests, but because of the variation
+# of different machines the tests may run on, the coverage of the branches can vary
+def load_driver(*, verbose :bool = True) -> DriverModule:  # pragma: no cover
     """Loads either :module:`sqlite3`, or, if its version is too low, loads :module:`pysqlite3` instead.
 
     We need at least 3.35.0 for Generalized ``UPSERT`` and ``RETURNING``;
@@ -75,12 +77,12 @@ def load_driver(*, verbose :bool = True) -> DriverModule:
     if sqlite3.sqlite_version_info < (3,35,0):
         # noinspection PyPackageRequirements
         import pysqlite3
-        if pysqlite3.sqlite_version_info < (3,35,0):  # pragma: no cover
+        if pysqlite3.sqlite_version_info < (3,35,0):
             raise ImportError(f"Need a recent SQLite version ({sqlite3.sqlite_version=}, {pysqlite3.sqlite_version=})")
-        if verbose:  # pragma: no cover
+        if verbose:
             print(f"Loaded pysqlite3 ({sqlite3.sqlite_version=}, {pysqlite3.sqlite_version=})", file=sys.stderr)
         return pysqlite3
-    else:  # pragma: no cover
+    else:
         if verbose:
             print(f"Loaded sqlite3 ({sqlite3.sqlite_version=})", file=sys.stderr)
         return sqlite3
