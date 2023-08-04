@@ -39,6 +39,8 @@ class EnvironmentLine(NamedTuple):
     program_sig :str
     table_name :str
 
+TOA5_STATUS_TABLE_NAMES = ('DataTableInfo','Public','Status')
+
 _envline_keys = ('toa5',) + EnvironmentLine._fields
 def read_header(csvreader :Iterator[Sequence[str]]) -> tuple[EnvironmentLine, tuple[ColumnHeader, ...]]:
     # noinspection PyShadowingNames,PyUnresolvedReferences

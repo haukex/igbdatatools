@@ -53,7 +53,7 @@ def header_match(envline :toa5.EnvironmentLine, columns :tuple[ColumnHeader, ...
         assert len(found)==1
         md = found[0]
         if envline.table_name not in md.tables:
-            raise NoTableMatch(repr(envline))
+            raise NoTableMatch(repr(envline), table_name=envline.table_name)
         tblmd = md.tables[envline.table_name]
         # identify variant (see metadata.py for info on variant map)
         if columns not in tblmd.variants:

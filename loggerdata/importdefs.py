@@ -33,7 +33,10 @@ from datatypes import TimestampNoTz, PythonDataTypes, NumPyDataTypes
 
 class DataImportError(RuntimeError): pass
 class NoMetadataMatch(DataImportError): pass
-class NoTableMatch(DataImportError): pass
+class NoTableMatch(DataImportError):
+    def __init__(self, message :str, *, table_name :str):
+        self.message = message
+        self.table_name = table_name
 class NoVariantMatch(DataImportError): pass
 class RecordError(DataImportError): pass
 

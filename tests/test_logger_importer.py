@@ -124,9 +124,10 @@ class TestLoggerDataImporter(unittest.TestCase):
             self.assertEqual(DataFileType.TOA5, rec2.filetype)
         self.assertEqual(1, count)
         # check with ignore_notablematch turned off
-        with self.assertRaises(NoTableMatch):
+        with self.assertRaises(NoTableMatch) as cm:
             list( read_records(source=simple_file_source( Path(__file__).parent/'toa5'/'TestLogger_Status.dat' ),
                                metadatas=self.metad, ignore_notablematch=False ) )
+        self.assertEqual(cm.exception.table_name, 'Status')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

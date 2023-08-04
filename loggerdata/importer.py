@@ -21,7 +21,6 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
 import io
-import csv
 import typing
 from igbpyutils.file import AnyPaths, to_Paths, BinaryStream
 from more_itertools import peekable
