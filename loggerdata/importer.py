@@ -46,12 +46,12 @@ def decide_filetype(fn :PurePath, fh :peekable) -> DataFileType:
         return DataFileType.UNKNOWN
 
 def simple_file_source(paths :AnyPaths) -> Generator[ tuple[tuple[Path], typing.IO[bytes]] ]:
-    """A simple file source for ``read_records``."""
+    """A simple file source for :func:`get_record_sources` and :func:`read_records`."""
     for pth in to_Paths(paths):
         with pth.open('rb') as fh:
             yield (pth,), fh
 
-def get_record_sources(*, source :Iterable[tuple[ Sequence[PurePath], BinaryStream ]],
+def get_record_sources(*, filesource :Iterable[tuple[ Sequence[PurePath], BinaryStream ]],
                        metadatas :MdCollection|Metadata|MdTable) -> Generator[Generator[Record, None, None], None, None]:
     """This generator turns a set of input files into a set of sources of :class:`Record`s.
 
@@ -60,11 +60,9 @@ def get_record_sources(*, source :Iterable[tuple[ Sequence[PurePath], BinaryStre
 
     Note that especially the first call of each returned generator may throw exceptions,
     see e.g. :func:`~loggerdata.toa5.dataimport.header_match`.
-
-    :exc:`RecordError`
     """
     metadatas = MdCollection(metadatas)
-    for fns, bfh in source:
+    for fns, bfh in filesource:
         with io.TextIOWrapper(bfh, 'ASCII', newline='') as fh:
             fh = peekable(fh)
             ft = decide_filetype(fns[-1], fh)
@@ -80,12 +78,14 @@ def read_records(*, source :Iterable[tuple[ Sequence[PurePath], BinaryStream ]],
                  metadatas :MdCollection|Metadata|MdTable, ignore_notablematch :bool = True) -> Generator[Record, None, None]:
     """This generator reads a set of input files and returns (typechecked) ``Record``s.
 
-    TODO: This is hardly used, can it be deprecated in favor of get_record_sources?
-
     ``source`` can come from ``simple_file_source``, or it can come from e.g. ``unzipwalk``
     (note that ``unzipwalk`` returns a tuple of three values, while this function expects two).
     """
-    for recsrc in get_record_sources(source=source, metadatas=metadatas):
+    #TODO: This is hardly used, can it be deprecated in favor of get_record_sources?
+    # Or rather: We probably shouldn't typecheck here, and instead just make this a thin wrapper for get_record_sources
+    # that also applies the same NoTableMatch "skip tables" logic as datacheck.py
+    # (note ignore_notablematch is currently completely unused)
+    for recsrc in get_record_sources(filesource=source, metadatas=metadatas):
         recsrc = peekable(recsrc)
         try: recsrc.peek()
         except NoTableMatch:
