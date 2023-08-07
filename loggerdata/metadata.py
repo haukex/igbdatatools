@@ -127,6 +127,50 @@ class ColumnHeader(NamedTuple):
             csv += "[" + short_units.get(self.unit, self.unit) + "]"
         return csv
 
+class TimeRange(NamedTuple):
+    """Represents either a time range or a timestamp (when ``end`` is ``None``).
+
+    Note that "open" start and end times are represented by the following min and max :class:`datetime`, respectively:
+    ``datetime(1, 1, 1, tzinfo=timezone.utc)`` and ``datetime(9999, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc)``
+    """
+    why :str
+    start :datetime
+    end :Optional[datetime] = None
+    def validate(self) -> Self:
+        if not self.why or self.why.isspace():
+            raise ValueError('range "why" is empty')
+        if not self.start.tzinfo or self.end and not self.end.tzinfo:
+            raise ValueError(f"tzinfo not set on start and/or end")
+        if self.end and self.end <= self.start:
+            raise ValueError(f"range end <= start ({self!r})")
+        return self
+    @staticmethod
+    def from_js(js :dict[str, str], *, tz :tzinfo = None) -> 'TimeRange':
+        tr = TimeRange( why = js['why'],
+            start = datetime.min.replace(tzinfo=timezone.utc) if js['time']=='open' else datetime.fromisoformat(js['time']),
+            end = ( datetime.max.replace(tzinfo=timezone.utc) if js['end'] =='open' else datetime.fromisoformat(js['end']) ) if 'end' in js else None )
+        if not tr.start.tzinfo and tz: tr = tr._replace( start = tr.start.replace( tzinfo=tz ) )
+        if tr.end and not tr.end.tzinfo and tz: tr = tr._replace( end = tr.end.replace( tzinfo=tz ) )
+        return tr.validate()
+    @staticmethod
+    def validate_set(ranges :Sequence['TimeRange']):
+        for x, y in combinations(ranges, 2):
+            if x.end and y.end:  # two ranges
+                # To-Do for Later: I think this isn't the most efficient set of checks
+                # x---x or  x-x  or x---x   or   x---x
+                #  y-y     y---y      y---y    y---y
+                bad = x.start < y.start < x.end and x.start < y.end < x.end \
+                      or y.start < x.start < y.end and y.start < x.end < y.end \
+                      or x.start < y.start < x.end or x.start < y.end < x.end
+            elif x.end:  # x is a range, y is not
+                bad = x.start < y.start < x.end
+            elif y.end:  # y is a range, x is not
+                bad = y.start < x.start < y.end
+            else:  # two timestamps
+                bad = x.start == y.start
+            if bad:
+                raise ValueError(f"overlapping ranges in a set: {x=} {y=}")
+
 class MdBase:
     """Base class for metadata classes."""
     @classmethod
@@ -316,50 +360,6 @@ class Toa5EnvMatch(MdBase):
 
 class LoggerType(Enum):
     TOA5 = 1
-
-class TimeRange(NamedTuple):
-    """Represents either a time range or a timestamp (when ``end`` is ``None``).
-
-    Note that "open" start and end times are represented by the following min and max :class:`datetime`, respectively:
-    ``datetime(1, 1, 1, tzinfo=timezone.utc)`` and ``datetime(9999, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc)``
-    """
-    why :str
-    start :datetime
-    end :Optional[datetime] = None
-    def validate(self) -> Self:
-        if not self.why or self.why.isspace():
-            raise ValueError('range "why" is empty')
-        if not self.start.tzinfo or self.end and not self.end.tzinfo:
-            raise ValueError(f"tzinfo not set on start and/or end")
-        if self.end and self.end <= self.start:
-            raise ValueError(f"range end <= start ({self!r})")
-        return self
-    @staticmethod
-    def from_js(js :dict[str, str], *, tz :tzinfo = None) -> 'TimeRange':
-        tr = TimeRange( why = js['why'],
-            start = datetime.min.replace(tzinfo=timezone.utc) if js['time']=='open' else datetime.fromisoformat(js['time']),
-            end = ( datetime.max.replace(tzinfo=timezone.utc) if js['end'] =='open' else datetime.fromisoformat(js['end']) ) if 'end' in js else None )
-        if not tr.start.tzinfo and tz: tr = tr._replace( start = tr.start.replace( tzinfo=tz ) )
-        if tr.end and not tr.end.tzinfo and tz: tr = tr._replace( end = tr.end.replace( tzinfo=tz ) )
-        return tr.validate()
-    @staticmethod
-    def validate_set(ranges :Sequence['TimeRange']):
-        for x, y in combinations(ranges, 2):
-            if x.end and y.end:  # two ranges
-                # To-Do for Later: I think this isn't the most efficient set of checks
-                # x---x or  x-x  or x---x   or   x---x
-                #  y-y     y---y      y---y    y---y
-                bad = x.start < y.start < x.end and x.start < y.end < x.end \
-                      or y.start < x.start < y.end and y.start < x.end < y.end \
-                      or x.start < y.start < x.end or x.start < y.end < x.end
-            elif x.end:  # x is a range, y is not
-                bad = x.start < y.start < x.end
-            elif y.end:  # y is a range, x is not
-                bad = y.start < x.start < y.end
-            else:  # two timestamps
-                bad = x.start == y.start
-            if bad:
-                raise ValueError(f"overlapping ranges in a set: {x=} {y=}")
 
 @dataclass(kw_only=True)
 class Metadata(MdBase):
