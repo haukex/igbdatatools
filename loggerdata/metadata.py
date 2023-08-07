@@ -318,15 +318,30 @@ class LoggerType(Enum):
     TOA5 = 1
 
 class TimeRange(NamedTuple):
-    """Represents either a time range or a timestamp (when ``end`` is ``None``)."""
+    """Represents either a time range or a timestamp (when ``end`` is ``None``).
+
+    Note that "open" start and end times are represented by the following min and max :class:`datetime`, respectively:
+    ``datetime(1, 1, 1, tzinfo=timezone.utc)`` and ``datetime(9999, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc)``
+    """
     why :str
     start :datetime
     end :Optional[datetime] = None
-    def validate(self):
+    def validate(self) -> Self:
         if not self.why or self.why.isspace():
             raise ValueError('range "why" is empty')
+        if not self.start.tzinfo or self.end and not self.end.tzinfo:
+            raise ValueError(f"tzinfo not set on start and/or end")
         if self.end and self.end <= self.start:
             raise ValueError(f"range end <= start ({self!r})")
+        return self
+    @staticmethod
+    def from_js(js :dict[str, str], *, tz :tzinfo = None) -> 'TimeRange':
+        tr = TimeRange( why = js['why'],
+            start = datetime.min.replace(tzinfo=timezone.utc) if js['time']=='open' else datetime.fromisoformat(js['time']),
+            end = ( datetime.max.replace(tzinfo=timezone.utc) if js['end'] =='open' else datetime.fromisoformat(js['end']) ) if 'end' in js else None )
+        if not tr.start.tzinfo and tz: tr = tr._replace( start = tr.start.replace( tzinfo=tz ) )
+        if tr.end and not tr.end.tzinfo and tz: tr = tr._replace( end = tr.end.replace( tzinfo=tz ) )
+        return tr.validate()
     @staticmethod
     def validate_set(ranges :Sequence['TimeRange']):
         for x, y in combinations(ranges, 2):
@@ -382,10 +397,6 @@ class Metadata(MdBase):
                 if len(sn.strip())<1:
                     raise ValueError(f"Sensor id {sid!r} has an empty value")
         for e in chain(self.known_gaps, self.skip_recs):
-            if not e.start.tzinfo and not self.tz:
-                raise ValueError(f"No TZ for time range start ({e!r})")
-            if e.end and not e.end.tzinfo and not self.tz:
-                raise ValueError(f"No TZ for time range end ({e!r})")
             e.validate()
         TimeRange.validate_set(self.known_gaps)
         TimeRange.validate_set(self.skip_recs)
@@ -497,6 +508,7 @@ def load_logger_metadata(file) -> Metadata:
         md['sensors'] = dict(**js['sensors'])
         unused_sensors = set(md['sensors'].keys())
     # check tz and min_datetime
+    thetz = None
     if 'tz' in js:
         if m := _tzoffset_re.fullmatch(js['tz']):
             # e.g. "-04:30" becomes datetime.timezone(datetime.timedelta(days=-1, seconds=70200))
@@ -508,16 +520,15 @@ def load_logger_metadata(file) -> Metadata:
             md['tz'] = timezone(delta)
         else:
             md['tz'] = ZoneInfo(js['tz'])  # will raise exception if not found
+        thetz = md['tz']
     else: pass  # the case of tz not being set is handled in validate()
     if 'min_datetime' in js:
         md['min_datetime'] = datetime.fromisoformat(js['min_datetime'])
-        if md['min_datetime'].tzinfo is None and 'tz' in md:
-            md['min_datetime'] = md['min_datetime'].replace( tzinfo = md['tz'] )
+        if md['min_datetime'].tzinfo is None and thetz:
+            md['min_datetime'] = md['min_datetime'].replace( tzinfo = thetz )
     for k in ('known_gaps','skip_records'):
         if k in js:
-            md['skip_recs' if k=='skip_records' else k] = tuple(
-                TimeRange( why=el['why'], start=datetime.fromisoformat(el['time']),
-                end=datetime.fromisoformat(el['end'] ) if 'end' in el else None) for el in js[k] )
+            md['skip_recs' if k=='skip_records' else k] = tuple( TimeRange.from_js(el, tz=thetz) for el in js[k] )
     # handle tables and columns
     md['ignore_tables'] = frozenset( no_duplicates(js['ignore_tables']) if 'ignore_tables' in js else () )
     for table, tdata in js['tables'].items():

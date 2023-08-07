@@ -419,6 +419,18 @@ class TestLoggerMetadata(unittest.TestCase):
             md4.logger_name = md1.logger_name
             with self.assertRaises(ValueError): MdC(md1,md4)  # duplicate logger name
 
+    def test_timerange_parse(self):
+        with self.assertRaises(ValueError):
+            load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"known_gaps":[{"time":"2023-08-07 13:00:00","end":"2023-08-07 14:00:00Z","why":"x"}],"tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
+        with self.assertRaises(ValueError):
+            load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"known_gaps":[{"time":"2023-08-07 13:00:00Z","end":"2023-08-07 14:00:00","why":"x"}],"tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
+        md1 = load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","known_gaps":[{"time":"open","end":"2023-08-07 14:00:00","why":"x"}],"tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
+        self.assertEqual( md1.known_gaps[0].start, datetime.min.replace(tzinfo=timezone.utc) )
+        self.assertEqual( md1.known_gaps[0].end, datetime(2023,8,7,14,tzinfo=timezone.utc) )
+        md2 = load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","known_gaps":[{"time":"2023-08-07 13:00:00","end":"open","why":"x"}],"tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
+        self.assertEqual( md2.known_gaps[0].start, datetime(2023,8,7,13,tzinfo=timezone.utc) )
+        self.assertEqual( md2.known_gaps[0].end, datetime.max.replace(tzinfo=timezone.utc) )
+
     def test_timerange(self):
         TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:04:05Z"), end=datetime.fromisoformat("2023-01-02 03:04:06Z")).validate()
         with self.assertRaises(ValueError):
@@ -427,6 +439,10 @@ class TestLoggerMetadata(unittest.TestCase):
             TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:04:05Z"), end=datetime.fromisoformat("2023-01-02 03:04:05Z")).validate()
         with self.assertRaises(ValueError):
             TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:04:05Z"), end=datetime.fromisoformat("2023-01-02 03:04:04Z")).validate()
+        with self.assertRaises(ValueError):
+            TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:04:05"), end=datetime.fromisoformat("2023-01-02 03:04:06Z")).validate()
+        with self.assertRaises(ValueError):
+            TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:04:05Z"), end=datetime.fromisoformat("2023-01-02 03:04:06")).validate()
         def mkrngset(*inp):
             for x,y in inp:
                 yield TimeRange(why=x, start=datetime.fromisoformat(x), end=datetime.fromisoformat(y) if y else None)

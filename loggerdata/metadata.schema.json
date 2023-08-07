@@ -5,7 +5,8 @@
 	"$defs": {
 		"ident":    { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{1,254}$" },
 		"colname":  { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{1,250}(\\(\\d{1,3}\\))?$" },
-		"datetime": { "type": "string", "pattern": "^\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d(Z|[-+]\\d\\d:\\d\\d)?$" },
+		"datetime": { "type": "string", "pattern":  "^\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d(Z|[-+]\\d\\d:\\d\\d)?$" },
+		"rangedef": { "type": "string", "pattern": "^(\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d(Z|[-+]\\d\\d:\\d\\d)?|open)$" },
 		"colobj": {
 			"type": "object",
 			"$comment": "property types should be the same as in 'columns'",
@@ -22,8 +23,8 @@
 			"items": {
 				"type": "object",
 				"properties": {
-					"time": { "$ref": "#/$defs/datetime", "title": "Either a single timestamp or the starting time in the range (inclusive)" },
-					"end":  { "$ref": "#/$defs/datetime", "title": "The end time of the time range (inclusive; optional for single timestamps)" },
+					"time": { "$ref": "#/$defs/rangedef", "title": "Either a single timestamp or the starting time in the range (inclusive)" },
+					"end":  { "$ref": "#/$defs/rangedef", "title": "The end time of the time range (inclusive; optional for single timestamps)" },
 					"why":  { "type": "string", "title": "A description of the reason for this time / range" }
 				},
 				"required": [ "time", "why" ],
