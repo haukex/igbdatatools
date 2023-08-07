@@ -19,18 +19,14 @@
 			"additionalProperties": false
 		},
 		"timerange": {
-			"type": "array",
-			"items": {
-				"type": "object",
-				"properties": {
-					"time": { "$ref": "#/$defs/rangedef", "title": "Either a single timestamp or the starting time in the range (inclusive)" },
-					"end":  { "$ref": "#/$defs/rangedef", "title": "The end time of the time range (inclusive; optional for single timestamps)" },
-					"why":  { "type": "string", "title": "A description of the reason for this time / range" }
-				},
-				"required": [ "time", "why" ],
-				"additionalProperties": false
+			"type": "object",
+			"properties": {
+				"time": { "$ref": "#/$defs/rangedef", "title": "Either a single timestamp or the starting time in the range (inclusive)" },
+				"end":  { "$ref": "#/$defs/rangedef", "title": "The end time of the time range (inclusive; optional for single timestamps)" },
+				"why":  { "type": "string", "title": "A description of the reason for this time / range" }
 			},
-			"minItems": 1
+			"required": [ "time", "why" ],
+			"additionalProperties": false
 		}
 	},
 	"type": "object",
@@ -71,12 +67,22 @@
 			"additionalProperties": { "type": "string" },
 			"$comment": "further validation in code"
 		},
-		"known_gaps": { "$ref": "#/$defs/timerange", "title": "A list of known gaps in the input data" },
-		"skip_records": { "$ref": "#/$defs/timerange", "title": "Records to ignore in the input data" },
+		"known_gaps": {
+			"title": "A list of known gaps in the input data",
+			"type": "array",
+			"items": { "$ref": "#/$defs/timerange" },
+			"minItems": 1
+		},
+		"skip_records": {
+			"title": "Records to ignore in the input data",
+			"type": "array",
+			"items": { "$ref": "#/$defs/timerange" },
+			"minItems": 1
+		},
 		"ignore_tables": {
 			"type": "array",
-			"minItems": 1,
 			"items": { "$ref": "#/$defs/ident" },
+			"minItems": 1,
 			"uniqueItems": true
 		},
 		"tables": {
@@ -114,6 +120,24 @@
 							"additionalProperties": false
 						},
 						"minItems": 1
+					},
+					"known_issues": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"type": { "enum": ["bad", "unusual"] },
+								"cols": {
+									"type": "array",
+									"items": { "$ref": "#/$defs/colname" },
+									"minItems": 1,
+									"uniqueItems": true
+								},
+								"when": { "$ref": "#/$defs/timerange" }
+							},
+							"required": [ "type", "cols", "when" ],
+							"additionalProperties": false
+						}
 					},
 					"mappings": {
 						"type": "object",

@@ -32,6 +32,9 @@
 				{ "name": "PTemp_C_TMn",                  "prc": "TMn", "type": "TimestampNoTz", "lodt": "TS"    },
 				{ "name": "PTemp_C_Max", "unit": "Deg C", "prc": "Max", "type": "Num(5,2)",      "lodt": "FP2",  "plotgrp": "PTemp" },
 				{ "name": "PTemp_C_TMx",                  "prc": "TMx", "type": "TimestampNoTz", "lodt": "TS"    }
+			],
+			"known_issues": [
+				{ "type": "bad", "cols": [ "PTemp_C_Min" ], "when": { "time": "2021-06-22 00:00:00Z", "why": "example" } }
 			]
 		},
 		"Hourly": {

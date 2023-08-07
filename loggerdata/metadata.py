@@ -253,6 +253,7 @@ class MappingType(Enum):
 @dataclass(kw_only=True)
 class MdMapEntry(MdBase):
     """An entry in a ``MdMapping``."""
+    #TODO Later: since column names are also checked to be unique, can "old" just be a string of the column name?
     old: MdBaseCol
     new: MdBaseCol
     def validate(self):
@@ -279,6 +280,24 @@ class MdMapping(MdBase):
         for m in self.map: m.validate()
         return self
 
+class KnownIssueType(Enum):
+    UNUSUAL = 1
+    BAD = 2
+
+@dataclass(kw_only=True)
+class MdKnownIssue(MdBase):
+    type :KnownIssueType
+    cols :tuple[str]
+    when :TimeRange
+    def validate(self):
+        if self.type not in (KnownIssueType.UNUSUAL, KnownIssueType.BAD):
+            raise ValueError(f"unknown type {self.type}")
+        if not self.cols:
+            raise ValueError(f"empty cols")
+        for c in self.cols: self._valid_ident(c)
+        self.when.validate()
+        return self
+
 @dataclass(kw_only=True)
 class MdTable(MdBase):
     """A class representing a table definition.
@@ -296,6 +315,7 @@ class MdTable(MdBase):
     columns:  list[MdColumn]
     variants: dict[ tuple[ColumnHeader, ...], tuple[int, ...] ]
     mappings: dict[str, MdMapping] = field(default_factory=dict)
+    known_issues: list[MdKnownIssue] = field(default_factory=list)
     parent: 'Metadata' = field(default=None, init=False, repr=False, compare=False)  # is set in Metadata.__post_init__()
     def __post_init__(self):
         for mm in self.mappings.values():
@@ -326,8 +346,14 @@ class MdTable(MdBase):
         for c in self.columns: c.validate()
         # the dupe check on hdr covers the combination of name/unit/prc
         seen_hdr = set(no_duplicates( (c.hdr for c in self.columns), name='column') )
+        seen_names = set(no_duplicates( (c.name for c in self.columns), name='column name' ))
         set(no_duplicates( (c.sql for c in self.columns), name='sql column name'))
         set(no_duplicates( (c.hdr.csv for c in self.columns), name='csv column name'))
+        for ki in self.known_issues:
+            for c in ki.cols:
+                if c not in seen_names:
+                    raise ValueError(f"known issue references unknown column name {c!r}")
+            ki.validate()
         for mn, mm in self.mappings.items():
             if mn != mm.name:
                 raise RuntimeError(f"mapping key {mn!r} != name {mm.name!r}")
@@ -536,6 +562,7 @@ def load_logger_metadata(file) -> Metadata:
             "name" : table,
             "columns": [ MdColumn.from_dict(c) for c in tdata['columns'] ],
             "variants": {},
+            "known_issues": [],
             "mappings": {},
         }
         # process variants into variant maps
@@ -598,6 +625,14 @@ def load_logger_metadata(file) -> Metadata:
             v = next(iter(tempvar.values()))
             tmd['variants'][tuple(v['k'])] = tuple(v['i'])
         set(no_duplicates(tmd['variants'].values(), name='variant value'))  # sanity check, should hopefully never happen, otherwise it's a programming error
+        # handle known issues
+        if 'known_issues' in tdata:
+            for ki in tdata['known_issues']:
+                if ki['type']=='bad': kitype = KnownIssueType.BAD
+                elif ki['type']=='unusual': kitype = KnownIssueType.UNUSUAL
+                else: raise ValueError(f"bad known issue type {ki['type']!r}")  # pragma: no cover
+                tmd['known_issues'].append(
+                    MdKnownIssue( type=kitype, cols=tuple(ki['cols']), when=TimeRange.from_js(ki['when'], tz=thetz) ) )
         # handle mappings
         if 'mappings' in tdata:
             for mname, mval in tdata['mappings'].items():

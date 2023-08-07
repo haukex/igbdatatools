@@ -23,7 +23,8 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import unittest
 from pathlib import Path
 from loggerdata.metadata import DataInterval, load_logger_metadata, MdBaseCol, MdColumn, MdMapEntry, MdMapping, MappingType, \
-    MdTable, Toa5EnvMatch, Metadata, LoggerType, ColumnHeader, MdCollection, LoggerOrigDataType, TimeRange
+    MdTable, Toa5EnvMatch, Metadata, LoggerType, ColumnHeader, MdCollection, LoggerOrigDataType, TimeRange, MdKnownIssue, \
+    KnownIssueType
 from dateutil.relativedelta import relativedelta
 from zoneinfo import ZoneInfo
 from datetime import datetime, timedelta, timezone
@@ -67,6 +68,10 @@ _TestLogger_md = Metadata(
                 MdColumn( name="PTemp_C_TMn",               prc="TMn", type=TimestampNoTz(),     lodt=LoggerOrigDataType.CB_Timestamp ),
                 MdColumn( name="PTemp_C_Max", unit="Deg C", prc="Max", type=Num(5,2),            lodt=LoggerOrigDataType.CB_FP2,      plotgrp="PTemp"),
                 MdColumn( name="PTemp_C_TMx",               prc="TMx", type=TimestampNoTz(),     lodt=LoggerOrigDataType.CB_Timestamp ),
+            ],
+            known_issues = [
+                MdKnownIssue( type=KnownIssueType.BAD, cols=("PTemp_C_Min",),
+                              when=TimeRange( start=datetime(2021,6,22,tzinfo=timezone.utc), why="example" ) )
             ],
             variants = {
                 (ColumnHeader("TIMESTAMP", "TS", ""), ColumnHeader("RECORD", "RN", ""), ColumnHeader("BattV_Min", "Volts", "Min"),
@@ -216,8 +221,8 @@ class TestLoggerMetadata(unittest.TestCase):
         self.maxDiff = None
         md = load_logger_metadata( Path(__file__).parent/'TestLogger.json' )
         #from pprint import pprint
-        #with open("expect.txt","w") as fh: pprint(_TestLogger_md, stream=fh)
-        #with open("got.txt","w") as fh: pprint(md, stream=fh)
+        #with open("expect.txt","w",encoding="UTF-8") as fh: pprint(_TestLogger_md, stream=fh)
+        #with open("got.txt","w",encoding="UTF-8") as fh: pprint(md, stream=fh)
         self.assertEqual( md, _TestLogger_md )
         self.assertEqual( md.tables['Hourly'].mappings['Press_Humid'].old_idxs, (0,8,7) )
         self.assertEqual( "TestLogger/Daily", md.tables['Daily'].tblident )
@@ -362,6 +367,15 @@ class TestLoggerMetadata(unittest.TestCase):
             load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","ignore_tables":["hello","hello"],"tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
         with self.assertRaises(ValueError):
             load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","ignore_tables":["foo"],"tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}]}}}')
+        with self.assertRaises(ValueError):
+            # noinspection PyTypeChecker
+            MdKnownIssue( type=KnownIssueType.BAD, cols=(), when=TimeRange(why="x",start=datetime.fromisoformat("2023-01-02 03:04:05")) ).validate()
+        with self.assertRaises(ValueError):
+            # noinspection PyTypeChecker
+            MdKnownIssue( type=None, cols=("foo",), when=TimeRange(why="x",start=datetime.fromisoformat("2023-01-02 03:04:05")) ).validate()
+        with self.assertRaises(ValueError):
+            load_logger_metadata(b'{"logger_name":"Foo","toa5_env_match":{"station_name":"Foo"},"tz":"UTC","tables":{"foo":{"columns":[{"name":"TIMESTAMP","unit":"TS"}],'
+                                 b'"known_issues":[{"type":"unusual","cols":["bar"],"when":{"time":"2023-08-07 15:00:00Z","why":"x"}}]}}}')
 
     def test_metadata_collection(self):
         md1 = load_logger_metadata( Path(__file__).parent/'TestLogger.json' )
