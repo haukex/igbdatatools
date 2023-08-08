@@ -64,6 +64,7 @@ def from_string(s :str) -> BaseType:
     elif s == "TimestampNoTz": return TimestampNoTz()
     elif s == "TimestampWithTz": return TimestampWithTz()
     elif s == "OnlyNan": return OnlyNan()
+    elif s == "Ignore": return Ignore()
     elif m := _parseNum_regex.fullmatch(s):
         return Num(
             int(m.group(1)) if m.group(1) is not None else None,
@@ -259,6 +260,12 @@ class OnlyNan(BaseType):
     def to_np(self, value :str) -> type(numpy.nan):
         if not self.check(value): raise TypeError()
         return numpy.nan
+
+class Ignore(BaseType):
+    """This data type is a placeholder for columns that don't need to be type checked because their data is never used."""
+    def check(self, value :Any) -> True:
+        """Always returns ``True``."""
+        return True
 
 class TypeInferrer:
     """This class provides a way to analyze multiple values and return the best matching data type.

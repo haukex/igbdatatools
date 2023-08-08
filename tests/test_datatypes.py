@@ -57,6 +57,13 @@ class TestDataTypes(unittest.TestCase):
         self.assertTrue(datatypes.Num(5, 3) != datatypes.Num(5))
         self.assertTrue(datatypes.Num(5,3) != datatypes.Num())
         self.assertTrue(datatypes.Num(5) != datatypes.Num())
+        self.assertTrue(datatypes.Ignore() != datatypes.NonNegInt())
+        self.assertTrue(datatypes.Ignore() != datatypes.BigInt())
+        self.assertTrue(datatypes.Ignore() != datatypes.Num())
+        self.assertTrue(datatypes.Ignore() != datatypes.TimestampNoTz())
+        self.assertTrue(datatypes.Ignore() != datatypes.TimestampWithTz())
+        self.assertTrue(datatypes.Ignore() != datatypes.OnlyNan())
+        self.assertTrue(datatypes.Ignore() == datatypes.Ignore())
 
     def test_datatypes_str(self):
         self.assertEqual(str(datatypes.TimestampWithTz()), 'TimestampWithTz')
@@ -69,6 +76,7 @@ class TestDataTypes(unittest.TestCase):
         self.assertEqual(str(datatypes.Num(4, 0)), 'Num(4,0)')
         self.assertEqual(str(datatypes.Num(7)), 'Num(7)')
         self.assertEqual(str(datatypes.Num()), 'Num')
+        self.assertEqual(str(datatypes.Ignore()), 'Ignore')
 
     def test_datatypes_fromstring(self):
         self.assertIsInstance(datatypes.from_string("NonNegInt"), datatypes.NonNegInt)
@@ -76,6 +84,7 @@ class TestDataTypes(unittest.TestCase):
         self.assertIsInstance(datatypes.from_string("TimestampNoTz"), datatypes.TimestampNoTz)
         self.assertIsInstance(datatypes.from_string("TimestampWithTz"), datatypes.TimestampWithTz)
         self.assertIsInstance(datatypes.from_string("OnlyNan"), datatypes.OnlyNan)
+        self.assertIsInstance(datatypes.from_string("Ignore"), datatypes.Ignore)
         num1 = datatypes.from_string("Num(10,8)")
         self.assertIsInstance(num1, datatypes.Num)
         self.assertEqual( num1.precision, 10 )
@@ -273,6 +282,14 @@ class TestDataTypes(unittest.TestCase):
         self.assertTrue( numpy.isnan( uut.to_np("Nan") ) )
         with self.assertRaises(TypeError): uut.to_py(bad[-1])
         with self.assertRaises(TypeError): uut.to_np(bad[-1])
+
+    def test_datatypes_ignore(self):
+        uut = datatypes.Ignore()
+        self.assertTrue(uut.check(None))
+        self.assertTrue(uut.check("NaN"))
+        self.assertTrue(uut.check(3.4))
+        with self.assertRaises(NotImplementedError): uut.to_np("x")
+        with self.assertRaises(NotImplementedError): uut.to_py("y")
 
     def test_datatypes_infer(self):
         self.assertEqual(datatypes.TypeInferrer().run(('0', '1', 'NaN', '2', '3')), datatypes.NonNegInt())
