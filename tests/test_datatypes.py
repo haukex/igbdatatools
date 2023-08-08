@@ -270,6 +270,33 @@ class TestDataTypes(unittest.TestCase):
         for u in uuts:
             self.assertTrue( u.to_py('NaN').is_nan() )
             self.assertTrue( numpy.isnan( u.to_np('NaN') ) )
+        # ordering
+        self.assertTrue(  datatypes.Num(3,2) <  datatypes.Num(4,3) )
+        self.assertFalse( datatypes.Num(3,2) <  datatypes.Num(3,3) )
+        self.assertFalse( datatypes.Num(3,2) <  datatypes.Num(4,2) )
+        self.assertFalse( datatypes.Num(3,2) <  datatypes.Num(3,2) )
+        self.assertTrue(  datatypes.Num(3,2) <= datatypes.Num(4,3) )
+        self.assertTrue(  datatypes.Num(3,2) <= datatypes.Num(3,3) )
+        self.assertTrue(  datatypes.Num(3,2) <= datatypes.Num(4,2) )
+        self.assertTrue(  datatypes.Num(3,2) <= datatypes.Num(3,2) )
+        self.assertFalse( datatypes.Num(3,2) <= datatypes.Num(2,2) )
+        self.assertFalse( datatypes.Num(3,2) <= datatypes.Num(3,1) )
+        self.assertFalse( datatypes.Num(3,2) <= datatypes.Num(2,1) )
+        self.assertTrue(  datatypes.Num(4,3) >  datatypes.Num(3,2) )
+        self.assertFalse( datatypes.Num(3,3) >  datatypes.Num(3,2) )
+        self.assertFalse( datatypes.Num(4,2) >  datatypes.Num(3,2) )
+        self.assertFalse( datatypes.Num(3,2) >  datatypes.Num(3,2) )
+        self.assertTrue(  datatypes.Num(4,3) >= datatypes.Num(3,2) )
+        self.assertTrue(  datatypes.Num(3,3) >= datatypes.Num(3,2) )
+        self.assertTrue(  datatypes.Num(4,2) >= datatypes.Num(3,2) )
+        self.assertTrue(  datatypes.Num(3,2) >= datatypes.Num(3,2) )
+        self.assertFalse( datatypes.Num(2,2) >= datatypes.Num(3,2) )
+        self.assertFalse( datatypes.Num(3,1) >= datatypes.Num(3,2) )
+        self.assertFalse( datatypes.Num(2,1) >= datatypes.Num(3,2) )
+        with self.assertRaises(TypeError): _ = datatypes.Num() <  3
+        with self.assertRaises(TypeError): _ = datatypes.Num() <= 3
+        with self.assertRaises(TypeError): _ = datatypes.Num() >  3
+        with self.assertRaises(TypeError): _ = datatypes.Num() >= 3
 
     def test_datatypes_onlynan(self):
         uut = datatypes.OnlyNan()

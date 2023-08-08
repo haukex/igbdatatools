@@ -131,6 +131,18 @@ class Num(BaseType):
         return numpy.float64(value)
     def __eq__(self, other):
         return isinstance(other, Num) and other.precision == self.precision and other.scale == self.scale
+    def __lt__(self, other):  # are we less than the other?
+        if not isinstance(other, Num): return NotImplemented
+        return self.precision < other.precision and self.scale < other.scale
+    def __le__(self, other):  # are we less than or equal to the other?
+        if not isinstance(other, Num): return NotImplemented
+        return self.precision <= other.precision and self.scale <= other.scale
+    def __gt__(self, other):  # are we greater than the other?
+        if not isinstance(other, Num): return NotImplemented
+        return self.precision > other.precision and self.scale > other.scale
+    def __ge__(self, other):  # are we greated or equal than the other?
+        if not isinstance(other, Num): return NotImplemented
+        return self.precision >= other.precision and self.scale >= other.scale
     def __repr__(self):
         if self.precision is None and self.scale is None: return 'Num'
         elif self.scale is None: return f"Num({self.precision})"
