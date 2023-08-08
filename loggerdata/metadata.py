@@ -134,12 +134,19 @@ class ColumnHeader(NamedTuple):
 class TimeRange(NamedTuple):
     """Represents either a time range or a timestamp (when ``end`` is ``None``).
 
+    ``start`` and ``end`` are inclusive.
+
     Note that "open" start and end times are represented by the following min and max :class:`datetime`, respectively:
     ``datetime(1, 1, 1, tzinfo=timezone.utc)`` and ``datetime(9999, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc)``
     """
     why :str
     start :datetime
     end :Optional[datetime] = None
+    def __contains__(self, item):
+        if self.end is None:
+            return item == self.start
+        else:
+            return self.start <= item <= self.end
     def validate(self) -> Self:
         if not self.why or self.why.isspace():
             raise ValueError('range "why" is empty')

@@ -535,7 +535,20 @@ class TestLoggerMetadata(unittest.TestCase):
         self.assertEqual( md2.known_gaps[0].end, datetime.max.replace(tzinfo=timezone.utc) )
 
     def test_timerange(self):
-        TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:04:05Z"), end=datetime.fromisoformat("2023-01-02 03:04:06Z")).validate()
+        tr1 = TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:04:05Z"), end=datetime.fromisoformat("2023-01-02 03:04:07Z")).validate()
+        self.assertNotIn( datetime.fromisoformat("2023-01-02 03:04:04Z"), tr1 )
+        self.assertIn( datetime.fromisoformat("2023-01-02 03:04:05Z"), tr1 )
+        self.assertIn( datetime.fromisoformat("2023-01-02 03:04:06Z"), tr1 )
+        self.assertIn( datetime.fromisoformat("2023-01-02 03:04:07Z"), tr1 )
+        self.assertNotIn( datetime.fromisoformat("2023-01-02 03:04:08Z"), tr1 )
+        with self.assertRaises(TypeError):  # "can't compare offset-naive and offset-aware datetimes"
+            _ = datetime.fromisoformat("2023-01-02 03:04:05") in tr1
+        with self.assertRaises(TypeError):
+            _ = "yak" in tr1
+        tr2 = TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:05:06Z")).validate()
+        self.assertNotIn( datetime.fromisoformat("2023-01-02 03:05:05Z"), tr2 )
+        self.assertIn( datetime.fromisoformat("2023-01-02 03:05:06Z"), tr2 )
+        self.assertNotIn( datetime.fromisoformat("2023-01-02 03:05:07Z"), tr2 )
         with self.assertRaises(ValueError):
             TimeRange(why=" \t\n ", start=datetime.fromisoformat("2023-01-02 03:04:05Z")).validate()
         with self.assertRaises(ValueError):
