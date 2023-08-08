@@ -155,6 +155,10 @@ class TimeRange(NamedTuple):
         if self.end and self.end <= self.start:
             raise ValueError(f"range end <= start ({self!r})")
         return self
+    def __str__(self):
+        st = self.start.isoformat().replace('+00:00','Z')
+        return f"TimeRange[{st} to {self.end.isoformat().replace('+00:00','Z')} because {self.why}]" if self.end \
+            else f"TimeRange[{st} because {self.why}]"
 
     @staticmethod
     def from_js(js :dict[str, str], *, tz :tzinfo = None) -> 'TimeRange':

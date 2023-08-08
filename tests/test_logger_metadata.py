@@ -545,10 +545,12 @@ class TestLoggerMetadata(unittest.TestCase):
             _ = datetime.fromisoformat("2023-01-02 03:04:05") in tr1
         with self.assertRaises(TypeError):
             _ = "yak" in tr1
-        tr2 = TimeRange(why="x", start=datetime.fromisoformat("2023-01-02 03:05:06Z")).validate()
+        tr2 = TimeRange(why="y", start=datetime.fromisoformat("2023-01-02 03:05:06Z")).validate()
         self.assertNotIn( datetime.fromisoformat("2023-01-02 03:05:05Z"), tr2 )
         self.assertIn( datetime.fromisoformat("2023-01-02 03:05:06Z"), tr2 )
         self.assertNotIn( datetime.fromisoformat("2023-01-02 03:05:07Z"), tr2 )
+        self.assertEqual( str(tr1), "TimeRange[2023-01-02T03:04:05Z to 2023-01-02T03:04:07Z because x]" )
+        self.assertEqual( str(tr2), "TimeRange[2023-01-02T03:05:06Z because y]" )
         with self.assertRaises(ValueError):
             TimeRange(why=" \t\n ", start=datetime.fromisoformat("2023-01-02 03:04:05Z")).validate()
         with self.assertRaises(ValueError):
