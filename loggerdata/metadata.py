@@ -197,6 +197,9 @@ class MdBaseCol(MdBase):
     unit: Optional[str] = None
     prc:  Optional[str] = None
     @property
+    def tup(self) -> tuple[str, Optional[str], Optional[str]]:
+        return self.name, self.unit, self.prc
+    @property
     def hdr(self) -> ColumnHeader:
         return ColumnHeader(name=self.name, unit="" if self.unit is None else self.unit, prc="" if self.prc is None else self.prc)
     _sqlcolname_re = re.compile(r'\((\d+)\)\Z')

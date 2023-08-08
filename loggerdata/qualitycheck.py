@@ -57,6 +57,7 @@ def check_timeseq_strict(seq :Iterable[datetime], *, interval :DataInterval) -> 
     returning a :class:`BasicQuality` value for each item in the sequence.
 
     Note that ``UNUSUAL`` means that a gap larger than the expected interval is present.
+    Therefore, the first timestamp will never be reported as ``UNUSUAL``.
     """
     for i, (x, y) in enumerate(pairwise(seq)):
         if i==0: yield BasicQuality.GOOD if x == interval.floor(x) else BasicQuality.BAD

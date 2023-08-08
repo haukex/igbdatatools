@@ -233,6 +233,7 @@ class TestLoggerMetadata(unittest.TestCase):
                     if k == 'csv': continue  # the .csv property was moved into .hdr
                     self.assertEqual( getattr(col, k), v )
                 self.assertEqual( col.hdr.csv, _TestLogger_props[tbl][ci]['csv'] )
+                self.assertEqual( col.tup, (col.name, col.unit, col.prc) )
         self.assertEqual( md.tables['Daily'].sql, "testlogger_daily" )
         self.assertEqual( md.tables['Hourly'].sql, "testlogger_hourly" )
         self.assertEqual( md.tables['Hourly'].mappings['Press_Humid'].sql, "press_humid" )
