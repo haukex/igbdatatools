@@ -30,7 +30,7 @@ from enum import Enum
 from datetime import datetime, timedelta, timezone, tzinfo
 from zoneinfo import ZoneInfo
 from typing import Self, NamedTuple, Optional
-from collections.abc import Sequence, Callable
+from collections.abc import Sequence, Callable, Generator
 from more_itertools import unique_everseen
 from igbpyutils.iter import no_duplicates
 from jsonvalidate import load_json_schema, validate_json, freeze_json
@@ -49,6 +49,10 @@ class DataInterval(Enum):
     DAY1 = 4
     WEEK1 = 5
     MONTH1 = 6
+    def genrange(self, start :datetime, stop :datetime) -> Generator[datetime, None, None]:
+        while start < stop:
+            yield start
+            start += self.delta
     @property
     @cache
     def delta(self) -> timedelta|relativedelta:
@@ -144,6 +148,7 @@ class TimeRange(NamedTuple):
         if self.end and self.end <= self.start:
             raise ValueError(f"range end <= start ({self!r})")
         return self
+
     @staticmethod
     def from_js(js :dict[str, str], *, tz :tzinfo = None) -> 'TimeRange':
         tr = TimeRange( why = js['why'],
@@ -643,6 +648,8 @@ def load_logger_metadata(file) -> Metadata:
                     raise RuntimeError(f"map {mname} unsupported type")  # shouldn't happen b/c JSON Schema checks this
                 tmd['mappings'][mname] = MdMapping( name=mname, type=MappingType.VIEW,
                     map=[ MdMapEntry( old=MdBaseCol.from_dict(m['old']), new=MdBaseCol.from_dict(m['new']) ) for m in mval['map'] ] )
+        # I think the type checker is just confused on the following line
+        # noinspection PyTypeChecker
         md['tables'][table] = MdTable(**tmd)
     if unused_sensors:
         raise ValueError(f"The following sensors were never referenced: {unused_sensors!r}")

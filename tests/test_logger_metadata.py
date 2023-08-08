@@ -217,6 +217,94 @@ class TestLoggerMetadata(unittest.TestCase):
         self.assertEqual( tf_15m(datetime(2023,3,10,10,30, 0,     1)), datetime(2023, 3,10,10,30,0,0) )
         self.assertEqual( tf_15m(datetime(2023,3,10,10,30, 1,     0)), datetime(2023, 3,10,10,30,0,0) )
 
+    def test_interval_genrange(self):
+        # basic test
+        self.assertEqual( list(DataInterval.MIN15.genrange(
+            datetime(2023,8,8,16,0,0),
+            datetime(2023,8,8,17,0,0) )), [
+                datetime(2023,8,8,16, 0,0),
+                datetime(2023,8,8,16,15,0),
+                datetime(2023,8,8,16,30,0),
+                datetime(2023,8,8,16,45,0),
+            ] )
+        # with small offset
+        self.assertEqual( list(DataInterval.MIN15.genrange(
+            datetime(2023,8,8,16,3,5),
+            datetime(2023,8,8,17,0,0) )), [
+                datetime(2023,8,8,16, 3,5),
+                datetime(2023,8,8,16,18,5),
+                datetime(2023,8,8,16,33,5),
+                datetime(2023,8,8,16,48,5),
+            ] )
+        # end time slightly off
+        self.assertEqual( list(DataInterval.MIN15.genrange(
+            datetime(2023,8,8,16,0,0),
+            datetime(2023,8,8,17,0,0,1) )), [
+                datetime(2023,8,8,16, 0,0),
+                datetime(2023,8,8,16,15,0),
+                datetime(2023,8,8,16,30,0),
+                datetime(2023,8,8,16,45,0),
+                datetime(2023,8,8,17, 0,0),
+            ] )
+        # empty output
+        self.assertEqual( list(DataInterval.MIN15.genrange(
+            datetime(2023,8,8,16,0,0),
+            datetime(2023,8,8,16,0,0) )), [] )
+        self.assertEqual( list(DataInterval.MIN15.genrange(
+            datetime(2023,8,8,16,0,0),
+            datetime(2023,7,8,17,0,0) )), [] )
+        # one output value
+        self.assertEqual( list(DataInterval.MIN15.genrange(
+            datetime(2023,8,8,16,0,0),
+            datetime(2023,8,8,16,15,0) )), [
+                datetime(2023,8,8,16, 0,0),
+            ] )
+        self.assertEqual( list(DataInterval.MIN15.genrange(
+            datetime(2023,8,8,16,0,0),
+            datetime(2023,8,8,16,0,0,1) )), [
+                datetime(2023,8,8,16, 0,0),
+            ] )
+        # other intervals
+        self.assertEqual( list(DataInterval.MIN30.genrange(
+            datetime(2023,8,8,16,0,0),
+            datetime(2023,8,8,17,0,0) )), [
+                datetime(2023,8,8,16, 0,0),
+                datetime(2023,8,8,16,30,0),
+            ] )
+        self.assertEqual( list(DataInterval.HOUR1.genrange(
+            datetime(2023,8,8,14,0,0),
+            datetime(2023,8,8,17,0,0) )), [
+                datetime(2023,8,8,14, 0,0),
+                datetime(2023,8,8,15, 0,0),
+                datetime(2023,8,8,16, 0,0),
+            ] )
+        self.assertEqual( list(DataInterval.DAY1.genrange(
+            datetime(2023,8,8, 0,0,0),
+            datetime(2023,8,15, 0,0,0) )), [
+                datetime(2023,8, 8, 0, 0,0),
+                datetime(2023,8, 9, 0, 0,0),
+                datetime(2023,8,10, 0, 0,0),
+                datetime(2023,8,11, 0, 0,0),
+                datetime(2023,8,12, 0, 0,0),
+                datetime(2023,8,13, 0, 0,0),
+                datetime(2023,8,14, 0, 0,0),
+            ] )
+        self.assertEqual( list(DataInterval.WEEK1.genrange(
+            datetime(2023,8,1,0,0,0),
+            datetime(2023,9,1,0,0,0) )), [
+                datetime(2023,8, 1,0,0,0),
+                datetime(2023,8, 8,0,0,0),
+                datetime(2023,8,15,0,0,0),
+                datetime(2023,8,22,0,0,0),
+                datetime(2023,8,29,0,0,0),
+            ] )
+        self.assertEqual( list(DataInterval.MONTH1.genrange(
+            datetime(2023,8,8,16,0,0),
+            datetime(2023,9,8,17,0,0) )), [
+                datetime(2023,8,8,16, 0,0),
+                datetime(2023,9,8,16, 0,0),
+            ] )
+
     def test_metadata_logger(self):
         self.maxDiff = None
         md = load_logger_metadata( Path(__file__).parent/'TestLogger.json' )
