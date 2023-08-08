@@ -88,7 +88,7 @@ class Record:
             col = self.tblmd.columns[vi]
             if col.type:  # To-Do for Later: column types should eventually become mandatory (see metadata for similar note)
                 if not col.type.check(val):
-                    raise ValueError(f"value {val!r} does not match {col.type}")
+                    raise TypeError(f"Column {col.tup}: value {val!r} does not match {col.type}")
         return self
 
     def fullrow_as_py(self) -> Generator[PythonDataTypes, None, None]:

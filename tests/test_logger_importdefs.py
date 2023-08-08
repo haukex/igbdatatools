@@ -53,7 +53,7 @@ class TestLoggerDataImportDefs(unittest.TestCase):
         with self.assertWarns(UserWarning):
             md2 = load_logger_metadata(b'{"logger_name":"Bar","toa5_env_match":{"station_name":"Bar"},"tz":"-03:30","tables":{"bar":'
                 b'{"prikey":0,"columns":[ {"name":"Hello","type":"TimestampNoTz"}, {"name":"xyz"}, {"name":"World","type":"TimestampWithTz"}, {"name":"iii","type":"NonNegInt"} ]}}}')
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             Record(origrow=("2023-01-02 03:04:05","","2023-01-02 03:04:56+04:3","42"), tblmd=md2.tables['bar'],
                    variant=(0,1,2,3), filenames=(), srcline=3, filetype=DataFileType.TOA5).typecheck()
         rec = Record(origrow=("2023-01-02 03:04:05","","2023-01-02 03:04:56+04:30","42"), tblmd=md2.tables['bar'],
