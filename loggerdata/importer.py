@@ -61,6 +61,8 @@ def get_record_sources(*, filesource :Iterable[tuple[ Sequence[PurePath], Binary
     Note that especially the first call of each returned generator may throw exceptions,
     see e.g. :func:`~loggerdata.toa5.dataimport.header_match`.
     """
+    #TODO: Our callers are generally peeking at the first record to get metadata and exceptions.
+    # We should probably wrap that too, perhaps by returning an object that has the record source as one of its properties.
     metadatas = MdCollection(metadatas)
     for fns, bfh in filesource:
         with io.TextIOWrapper(bfh, 'ASCII', newline='') as fh:
