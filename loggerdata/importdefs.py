@@ -31,6 +31,7 @@ from loggerdata import toa5
 from loggerdata.metadata import Metadata, MdTable, MappingType
 from datatypes import TimestampNoTz, PythonDataTypes, NumPyDataTypes
 
+#TODO: DataImportError subclasses should probably have even more context, like filenames
 class DataImportError(RuntimeError): pass
 class NoMetadataMatch(DataImportError): pass
 class NoTableMatch(DataImportError):

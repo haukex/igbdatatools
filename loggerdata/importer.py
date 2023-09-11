@@ -72,6 +72,9 @@ def get_record_sources(*, filesource :Iterable[tuple[ Sequence[PurePath], Binary
                 raise NotImplementedError(f"can't handle CSV yet ({fns!r})")
             else:
                 assert ft == DataFileType.UNKNOWN
+                #TODO: warnings.warn does not let our caller know when we've skipped a file.
+                # perhaps we can return a generator (iterator?) that always throws an UnknwonFileException?
+                # (this is the reason the squid pyftpd boesel_api is currently using read_toa5_records...)
                 warnings.warn(f"skipping unknown file {fns!r}")
 
 def read_records(*, source :Iterable[tuple[ Sequence[PurePath], BinaryStream ]],
