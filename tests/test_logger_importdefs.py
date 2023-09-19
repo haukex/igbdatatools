@@ -34,6 +34,17 @@ class TestLoggerDataImportDefs(unittest.TestCase):
         b'{"prikey":0,"columns":[ {"name":"Hello"}, {"name":"World"}, {"name":"Foo"}, {"name":"Bar"}, {"name":"Quz"} ],'
         b'"mappings":{"xy":{"type":"view","map":[{"old":{"name":"Foo"},"new":{"name":"xyz"}}]}} }}}')
 
+    def test_record_getitem(self):
+        rec = Record(origrow=("abc","def","ghi"), tblmd=self.md.tables['foo'], variant=(1,2,3),
+                     filenames=(), srcline=1, filetype=DataFileType.TOA5)
+        self.assertEqual(rec.getcolval('Hello'), None)
+        self.assertEqual(rec.getcolval('World'), 'abc')
+        self.assertEqual(rec.getcolval('Foo'), 'def')
+        self.assertEqual(rec.getcolval('Bar'), 'ghi')
+        self.assertEqual(rec.getcolval('Quz'), None)
+        with self.assertRaises(KeyError): rec.getcolval('foo')
+        with self.assertRaises(TypeError): rec.getcolval(0)
+
     def test_record_row(self):
         self.assertEqual( Record(origrow=("abc","def"), tblmd=self.md.tables['foo'], variant=(1,3),
                                  filenames=(), srcline=1, filetype=DataFileType.TOA5).fullrow,

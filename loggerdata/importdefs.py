@@ -60,6 +60,14 @@ class Record:
     srcline :int
     filetype :DataFileType
 
+    def getcolval(self, key):
+        """Get the value of a column by the column name."""
+        if not isinstance(key, str): raise TypeError("key")
+        for i, col in enumerate(self.tblmd.columns):
+            if col.name == key:
+                return self.fullrow[i]
+        raise KeyError(key)
+
     @cached_property
     def fullrow(self) -> tuple[str|None, ...]:
         """While ``origrow`` represents the columns read from the input file,
