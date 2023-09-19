@@ -3,7 +3,6 @@
 more-itertools >= 9.1.0
 igbpyutils >= 0.0.7
 Unidecode
-regex
 pyicu  # sudo apt-get build-dep python3-icu; Windows: https://github.com/cgohlke/pyicu-build/releases
 ordered_enum
 tqdm

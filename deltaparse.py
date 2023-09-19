@@ -20,10 +20,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/
 """
-import regex
+import re
 
-_deltaregex = regex.compile(r'(?<=\A|\D)(\d+)\s*([dhms]?)(?=\Z|\d|\W)', regex.IGNORECASE)
-_validregex = regex.compile(r'\A\s*(?:' + _deltaregex.pattern + r'\s*)*\Z', regex.IGNORECASE)
+_split_re = re.compile(r'''(?<=[dhms])\s*(?=[0-9])|(?<=[0-9])\s+(?=[0-9])''', re.IGNORECASE)
+_detla_re = re.compile(r'''\A\s*(\d+)\s*([dhms]?)\s*\Z''', re.IGNORECASE)
 
 def deltaparse(string :str) -> int:
     """Parse a "time delta" string into seconds.
@@ -32,13 +32,15 @@ def deltaparse(string :str) -> int:
     without units are considered seconds. Values are summed, e.g. "40 5d 3h 2d
     2s" is the same as "7d 3h 42s".
     """
-    if not _validregex.fullmatch(string): raise ValueError("invalid delta string")
     delta_s = 0
-    for d, m in _deltaregex.findall(string):
-        if   m.lower() == "d": delta_s += int(d)*60*60*24
-        elif m.lower() == "h": delta_s += int(d)*60*60
-        elif m.lower() == "m": delta_s += int(d)*60
-        else:                  delta_s += int(d)
+    if string.isspace(): return 0
+    for part in _split_re.split(string):
+        if m := _detla_re.fullmatch(part):
+            if   m.group(2).lower() == "d": delta_s += int(m.group(1))*60*60*24
+            elif m.group(2).lower() == "h": delta_s += int(m.group(1))*60*60
+            elif m.group(2).lower() == "m": delta_s += int(m.group(1))*60
+            else:                           delta_s += int(m.group(1))
+        else: raise ValueError("invalid delta string")
     return delta_s
 
 if __name__ == '__main__':  # pragma: no cover

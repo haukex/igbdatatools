@@ -23,6 +23,7 @@ along with this program. If not, see https://www.gnu.org/licenses/
 import io
 import json
 import typing
+from warnings import catch_warnings, simplefilter
 from igbpyutils.file import Filename
 from types import MappingProxyType, NoneType
 from pprint import pprint
@@ -61,7 +62,9 @@ def _(file :io.IOBase|typing.IO):
 def _(file :bytes|bytearray):
     return json.load(io.BytesIO(file))
 
-_catalog = jschon.create_catalog('2020-12')
+with catch_warnings(category=EncodingWarning):
+    simplefilter('ignore', category=EncodingWarning)
+    _catalog = jschon.create_catalog('2020-12')
 def load_json_schema(file, *, verbose=False) -> jschon.JSONSchema:
     """Loads a JSON Schema and checks that the schema itself is valid, and raises an error if not.
 
