@@ -32,6 +32,7 @@ from loggerdata.metadata import Metadata, MdTable, MappingType
 from datatypes import TimestampNoTz, PythonDataTypes, NumPyDataTypes
 
 #TODO: DataImportError subclasses should probably have even more context, like filenames
+# grep -Er 'DataImportError|NoMetadataMatch|NoTableMatch|NoVariantMatch|RecordError|Toa5Error'
 class DataImportError(RuntimeError): pass
 class NoMetadataMatch(DataImportError): pass
 class NoTableMatch(DataImportError):

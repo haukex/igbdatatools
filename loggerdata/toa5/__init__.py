@@ -27,7 +27,7 @@ from igbpyutils.iter import no_duplicates
 from loggerdata.metadata import ColumnHeader, MdTable
 from collections.abc import Iterator, Sequence, Iterable, Generator
 
-#TODO: should Toa5Error be a subclass of DataImportError?
+#TODO: should Toa5Error be a subclass of DataImportError/RecordError?
 class Toa5Error(RuntimeError): pass
 
 class EnvironmentLine(NamedTuple):
