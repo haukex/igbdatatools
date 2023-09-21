@@ -98,6 +98,9 @@ class TestLoggerDataImporter(unittest.TestCase):
                 list( read_records(source=simple_file_source(td/'test.dat'), metadatas=self.metad) )
             with self.assertWarns(UserWarning):
                 list( read_records(source=simple_file_source(td/'test.txt'), metadatas=self.metad) )
+            (td/'empty.dat').touch()
+            with self.assertWarns(UserWarning):
+                list( read_records(source=simple_file_source(td/'empty.dat'), metadatas=self.metad) )
 
     def test_read_records_toa5(self):
         filesrc = ( x[0:2] for x in unzipwalk(Path(__file__).parent/'toa5') )

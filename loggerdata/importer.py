@@ -34,7 +34,11 @@ from collections.abc import Generator, Iterable, Sequence
 def decide_filetype(fn :PurePath, fh :peekable) -> DataFileType:
     """This function attempts to detect the type of an input file by its name and peeking at the first line."""
     if fn.suffix.lower() == '.dat':
-        firstline = fh.peek()
+        try:
+            firstline = fh.peek()
+        except StopIteration:
+            warnings.warn(f"file with .dat ending appears to be empty")
+            return DataFileType.UNKNOWN
         if firstline.startswith('"TOA5",') or firstline.startswith("TOA5,"):
             return DataFileType.TOA5
         else:
@@ -62,6 +66,7 @@ def get_record_sources(*, filesource :Iterable[tuple[ Sequence[PurePath], Binary
     see e.g. :func:`~loggerdata.toa5.dataimport.header_match`.
     """
     #TODO: Our callers are generally peeking at the first record to get metadata and exceptions.
+    #TODO: Can peeking at the first row of data throw a StopIteration?
     # We should probably wrap that too, perhaps by returning an object that has the record source as one of its properties.
     metadatas = MdCollection(metadatas)
     for fns, bfh in filesource:
