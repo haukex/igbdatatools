@@ -102,12 +102,12 @@ class TestDirIteration(unittest.TestCase):
         self.assertEqual(self.expect,
             sorted( (str(only(fnames)), ftype) for fnames, _, ftype in unzipwalk(self.td, onlyfiles=False) ) )
 
-    @unittest.skipIf(sys.hexversion<0x030C00F0, "requires Python 3.12+")  #TODO: currently untested
+    @unittest.skipIf(sys.hexversion<0x030C00B0, "requires Python 3.12+")
     def test_path_walk(self):  # pragma: no cover
         """Using the new Path.walk() is very similar to os.walk()."""
         def path_walker(path):
             # noinspection PyUnresolvedReferences
-            for root, dirs, files in Path(path).walk(onerror=_raise):
+            for root, dirs, files in Path(path).walk(on_error=_raise):
                 for p in ( root/name for name in chain(dirs, files) ):
                     yield p, path_to_type(p)
         self.assertEqual(self.expect,
