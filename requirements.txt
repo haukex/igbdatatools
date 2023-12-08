@@ -1,7 +1,7 @@
 # python3 -m pip install --upgrade pip wheel
 # pip3 install --upgrade --upgrade-strategy=eager -r requirements.txt
 more-itertools >= 9.1.0
-igbpyutils >= 0.0.7
+igbpyutils >= 0.3.2
 Unidecode
 pyicu  # sudo apt-get build-dep python3-icu; Windows: https://github.com/cgohlke/pyicu-build/releases
 ordered_enum
