@@ -103,7 +103,7 @@ class TestLoggerDataImporter(unittest.TestCase):
                 list( read_records(source=simple_file_source(td/'empty.dat'), metadatas=self.metad) )
 
     def test_read_records_toa5(self):
-        filesrc = ( x[0:2] for x in unzipwalk(Path(__file__).parent/'toa5') )
+        filesrc = ( (r.names,r.hnd) for r in unzipwalk(Path(__file__).parent/'toa5') if r.hnd is not None )
         got = { "Daily": [], "Hourly": [] }
         for rec in read_records(source=filesrc, metadatas=self.metad):
             self.assertIsInstance(rec, Toa5Record)

@@ -42,7 +42,8 @@ def list_problems(paths :AnyPaths, *, ignore_compressed :bool = False, ignore_sy
     allowed = _base_allowed_chars
     if allowed_chars: allowed |= allowed_chars
     collections :dict[tuple[PurePath, ...], set[str]] = defaultdict(set)
-    for fns,bfh,fty in unzipwalk(paths, onlyfiles=False):
+    for result in unzipwalk(paths):
+        fns, fty = result.names, result.typ
         thefn = fns[-1]
         # ##### ##### Type Check ##### #####
         if len(fns)==1:  # a physical file in the filesystem that we can stat
