@@ -3,7 +3,10 @@
 more-itertools >= 9.1.0
 igbpyutils >= 0.3.2
 Unidecode
-pyicu  # sudo apt-get build-dep python3-icu; Windows: https://github.com/cgohlke/pyicu-build/releases
+# https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers
+pyicu; platform_system != "Windows"  # sudo apt-get build-dep python3-icu
+# Windows: https://github.com/cgohlke/pyicu-build/releases
+https://github.com/cgohlke/pyicu-build/releases/download/v2.13/PyICU-2.13-cp312-cp312-win_amd64.whl; platform_system == "Windows" and python_version == '3.12' and platform_machine == 'AMD64'
 ordered_enum
 tqdm
 numpy
