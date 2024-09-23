@@ -12,5 +12,6 @@ else
     git clean -xf htmlcov
   else
     coverage html
+    exit 1
   fi
 fi
