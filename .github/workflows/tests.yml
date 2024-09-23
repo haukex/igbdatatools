@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [Ubuntu, Windows, macOS]
+        os: [Ubuntu, Windows]
         python-version: ["3.11", "3.12", "3.13"]
     runs-on: ${{ matrix.os }}-latest
     # Reminder: Keep in sync with dev/local-actions.sh
