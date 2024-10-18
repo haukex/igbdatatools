@@ -1,6 +1,9 @@
 #!python3
 """Functions for handling TOA5 files.
 
+.. deprecated:: 2024-10-18
+    Use https://pypi.org/project/PyTOA5/ instead.
+
 Author, Copyright, and License
 ------------------------------
 Copyright (c) 2023 Hauke Daempfling (haukex@zero-g.net)

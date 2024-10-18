@@ -9,6 +9,15 @@ Requirements: Python 3.11 and the requirements listed in `requirements.txt`.
 You can place this directory in your `PYTHONPATH` environment variable,
 see the file `notes/Notes.md` for details.
 
+Attention
+---------
+
+This repository has evolved into more of an incubator.
+For example, `loggerdata.toa5` was released as <https://pypi.org/project/PyTOA5/>
+and the former is therefore **deprecated** and will eventually be removed.
+While the code here is still tested and works, I plan on splitting more of
+those parts that have proven useful out into their own libraries / tools,
+and I may not continue development in this repository.
 
 TODOs
 -----
