@@ -1,4 +1,4 @@
-#!python3
+#!python
 """General-purpose logger data importer functions.
 
 Author, Copyright, and License

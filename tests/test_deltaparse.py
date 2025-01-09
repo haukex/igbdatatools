@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Tests for deltaparse.
 
 Author, Copyright, and License

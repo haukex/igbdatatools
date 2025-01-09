@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Parser for "time delta" strings.
 
 Author, Copyright, and License

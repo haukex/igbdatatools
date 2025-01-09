@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Functions for reading TOA5 files into Pandas data frames.
 
 Author, Copyright, and License

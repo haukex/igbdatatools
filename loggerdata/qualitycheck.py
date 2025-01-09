@@ -1,4 +1,4 @@
-#!python3
+#!python
 """Basic Data Quality checking functions
 
 Author, Copyright, and License

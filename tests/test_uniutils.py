@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Tests for uniutils.
 
 Author, Copyright, and License

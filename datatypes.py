@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Data type library with type checks and type inferral.
 
 These types are based on and are compatible with Postgres data types, but are

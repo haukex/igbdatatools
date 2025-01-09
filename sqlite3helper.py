@@ -1,4 +1,4 @@
-#!python3
+#!python
 """Helpers for SQLite3 databases used as logger data storage.
 
 The functions in this module provide helpers for our use case of importing

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Graphical frontend for file checksumming tool.
 
 Author, Copyright, and License

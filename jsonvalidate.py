@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Utility functions to load and validate JSON Schemas.
 
 Author, Copyright, and License

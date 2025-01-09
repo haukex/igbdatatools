@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Tests for lsb_obo.
 
 Author, Copyright, and License

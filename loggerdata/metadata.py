@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Metadata for representing datalogger data tables.
 
 Author, Copyright, and License

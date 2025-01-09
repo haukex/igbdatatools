@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Utility to check for Windows-safe filenames.
 
 Author, Copyright, and License

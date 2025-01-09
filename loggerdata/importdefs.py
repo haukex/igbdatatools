@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Common definitions used in the importing of logger data.
 
 Author, Copyright, and License

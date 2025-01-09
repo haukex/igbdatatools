@@ -30,7 +30,7 @@ jobs:
             requirements-dev.txt
       - name: Install dependencies
         run: |
-          python3 -m pip install --upgrade pip wheel
-          pip install -r requirements.txt -r requirements-dev.txt
+          python -m pip install --upgrade pip wheel
+          python -m pip install -r requirements.txt -r requirements-dev.txt
       - name: Run tests
         run: ./prove.sh

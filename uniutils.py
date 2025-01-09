@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Various Unicode related utility functions.
 
 Author, Copyright, and License

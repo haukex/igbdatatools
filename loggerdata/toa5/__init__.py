@@ -1,4 +1,4 @@
-#!python3
+#!python
 """Functions for handling TOA5 files.
 
 .. deprecated:: 2024-10-18

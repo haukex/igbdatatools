@@ -1,4 +1,4 @@
-#!python3
+#!python
 """A library for representing files together with their hashes.
 
 Author, Copyright, and License

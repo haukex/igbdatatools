@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Functions for importing TOA5 data files.
 
 Author, Copyright, and License

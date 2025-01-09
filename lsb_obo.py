@@ -1,4 +1,4 @@
-#!python3
+#!python
 """Test whether two decimal numbers are off-by-one on their least significant digit.
 
 Author, Copyright, and License

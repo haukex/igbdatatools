@@ -1,16 +1,15 @@
-// https://aka.ms/devcontainer.json
-{
-	"image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
-	"features": {
-		"ghcr.io/devcontainers/features/common-utils:2": {
-			"installZsh": false,
-			"installOhMyZsh": false,
-			"installOhMyZshConfig": false,
-			"username": "none",
-			"nonFreePackages": true
-		},
+{   // https://aka.ms/devcontainer.json
+    // https://github.com/devcontainers/images/tree/main/src/python
+    "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
+    "features": {
+        /* `features/common-utils` is already in the python image; it's missing non-free
+         * packages, but that's only manpages-posix and manpages-posix-dev. */
+        // "ghcr.io/devcontainers/features/node:1": {},
+        // "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+        // "ghcr.io/haukex/devcontainer-features/perl:1": {},
         "ghcr.io/lukewiwa/features/shellcheck:0": {},
         "ghcr.io/guiyomh/features/vim:0": {}
-	},
-	"postCreateCommand": ".devcontainer/initialize.sh"
+    },
+    "postCreateCommand": ".devcontainer/initialize.sh"
 }
+/* vim: set filetype=javascript ts=4 sw=4 expandtab : */

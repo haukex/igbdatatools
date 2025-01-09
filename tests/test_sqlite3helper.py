@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Tests for Sqlite3 Helper.
 
 Author, Copyright, and License
